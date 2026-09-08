@@ -1,0 +1,10 @@
+"id","ident","type","name","latitude_deg","longitude_deg","elevation_ft","continent","iso_country","iso_region","municipality","scheduled_service","icao_code","iata_code","gps_code","local_code","home_link","wikipedia_link","keywords"
+6523,"00A","heliport","Total RF Heliport",40.070985,-74.933689,11,"NA","US","US-PA","Bensalem","no",,,"K00A","00A","https://www.penndot.pa.gov/TravelInPA/airports-pa/Pages/Total-RF-Heliport.aspx",,
+4261,"LGKF","large_airport","Kefalonia International Airport ""Anna Pollatou""",38.120098,20.5005,59,"AS","GR","GR-F","Kefallinia Island","yes","LGKF","EFL","LGKF",,"https://www.efl-airport.gr/","https://en.wikipedia.org/wiki/Kefalonia_Island_International_Airport","Kefallinia"
+5023,"NZAA","large_airport","Auckland International Airport",-37.01199,174.786331,23,"OC","NZ","NZ-AUK","Auckland","yes","NZAA","AKL","NZAA",,"http://www.auckland-airport.co.nz/","https://en.wikipedia.org/wiki/Auckland_International_Airport",
+27145,"YSSY","large_airport","Sydney Kingsford Smith International Airport",-33.946098,151.177002,21,"OC","AU","AU-NSW","Sydney (Mascot)","yes","YSSY","SYD","YSSY",,"http://www.sydneyairport.com.au/","https://en.wikipedia.org/wiki/Sydney_Airport","Kingsford Smith, Mascot, RAAF Station Mascot"
+4650,"03N","small_airport","Utirik Airport",11.222219,169.851429,4,"OC","MH","MH-UTI","Utirik Island","yes",,"UTK","03N","03N",,"https://en.wikipedia.org/wiki/Utirik_Airport",
+516263,"AE-0221","medium_airport","Sas Al Nakheel Air Base",24.44128,54.51696,14,"AS","AE","AE-AZ","Sas Al Nakheel","no","OMNK",,"OMNK",,,,
+6541,"00IS","closed","Hayenga's Cant Find Farms Airport",40.0256,-89.122902,820,"NA","US","US-IL","Kings","no",,,,,,,"00IS"
+5024,"NZAP","medium_airport","Taupo Airport",-38.73970031738281,176.08399963378906,1335,"OC","NZ","NZ-WKO","Taupo","yes","NZAP","TUO","NZAP",,,"https://en.wikipedia.org/wiki/Taupo_Airport",
+556508,"AYWL","small_airport","Walagu Airstrip",-6.343247,142.825402,2000,"OC","PG","PG-SHM",,"no",,,"AYWL","WLG",,,
