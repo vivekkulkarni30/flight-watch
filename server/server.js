@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
+import { log } from './log.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -17,5 +18,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT) || 3000;
   const app = buildServer();
   await app.listen({ port, host: '0.0.0.0' });
-  console.log(`Flight Watch running at http://localhost:${port}`);
+  log.info(`Flight Watch running at http://localhost:${port}`);
 }
