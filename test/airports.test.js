@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadAirports, nearestAirport, distanceKm } from '../server/feeds/airports.js';
+import { buildServer } from '../server/server.js';
 
 test('loadAirports reads every row with numbers for lat and lon', () => {
   const airports = loadAirports();
@@ -40,4 +41,20 @@ test('nearestAirport returns null in the middle of the Pacific (nothing within 3
 test('nearestAirport works across the date line', () => {
   // Just east of 180 degrees, about 90 km from Labasa in Fiji (LBS at 179.34 E).
   assert.equal(nearestAirport(-16.5, -179.8)?.iata, 'LBS');
+});
+
+test('GET /api/airports returns the large airports for the map', async () => {
+  const app = buildServer();
+  const res = await app.inject({ method: 'GET', url: '/api/airports' });
+  assert.equal(res.statusCode, 200);
+  const list = res.json();
+  assert.deepEqual(list.find((a) => a.iata === 'SYD'), {
+    iata: 'SYD',
+    name: 'Sydney Kingsford Smith International Airport',
+    lat: -33.946098,
+    lon: 151.177002,
+  });
+  // Large airports only: Taupo (TUO) is a medium one.
+  assert.equal(list.find((a) => a.iata === 'TUO'), undefined);
+  await app.close();
 });
