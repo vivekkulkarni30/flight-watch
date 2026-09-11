@@ -12,7 +12,6 @@ async function showAirports() {
     const res = await fetch('/api/airports');
     if (!res.ok) return;
     const airports = await res.json();
-    console.log(airports);
 
     for (const airport of airports) {
       L.circleMarker([airport.lat, airport.lon], {
