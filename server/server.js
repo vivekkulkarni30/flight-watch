@@ -28,7 +28,16 @@ export function buildServer(options = {}) {
   // A flight's path: { callsign, icao24, points: [{ t, lat, lon, altM }] }.
   // The number goes to the lookup exactly as typed.
   app.get('/api/flight/:number', async (request, reply) => {
-    const path = await lookupFlight(request.params.number);
+    const { number } = request.params;
+    let path;
+    try {
+      path = await lookupFlight(number);
+    } catch (err) {
+      // Catch it here: left alone, Fastify sends OpenSky's own status (a 503, say) back to the browser,
+      // which reads as if our server were down. 502 says "the server is fine, the feed behind it isn't".
+      log.error(`flight lookup for ${number} failed: OpenSky status ${err.status ?? 'unknown'} (${err.message})`);
+      return reply.code(502).send({ error: 'feed-unavailable' });
+    }
     if (!path) return reply.code(404).send({ error: 'not-found' });
     return path;
   });
