@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { lookupFlight } from '../server/feeds/opensky.js';
 
 // Real OpenSky responses, trimmed (see data/README.md).
@@ -45,4 +47,24 @@ test('lookupFlight returns null for a callsign nobody is broadcasting', async ()
   const { fetch, urls } = fakeFetch();
   assert.equal(await lookupFlight('QFA999', { fetch }), null);
   assert.equal(urls.length, 1); // no track request when there's no aircraft
+});
+
+test('lookupFlight throws with status 429 and logs a WARN when OpenSky refuses', async (t) => {
+  // Send the log to a temporary file so we can read the WARN line back.
+  const folder = mkdtempSync(join(tmpdir(), 'flight-watch-opensky-'));
+  const before = process.env.LOG_FILE;
+  process.env.LOG_FILE = join(folder, 'test.log');
+  t.mock.method(console, 'log', () => {}); // keep test output clean
+  t.after(() => {
+    if (before === undefined) delete process.env.LOG_FILE;
+    else process.env.LOG_FILE = before;
+    rmSync(folder, { recursive: true, force: true });
+  });
+
+  const { fetch, urls } = fakeFetch({ statesStatus: 429 });
+  await assert.rejects(lookupFlight('QFA145', { fetch }), (err) => err.status === 429);
+  assert.equal(urls.length, 1); // gave up without asking for a track
+
+  const logged = readFileSync(process.env.LOG_FILE, 'utf8');
+  assert.match(logged, /WARN  opensky feed returned 429/);
 });
