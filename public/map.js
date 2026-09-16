@@ -30,3 +30,31 @@ async function showAirports() {
 }
 
 showAirports();
+
+// Flight search. Asks the server for the flight the user typed.
+const searchForm = document.getElementById('search');
+const flightInput = document.getElementById('flight');
+const message = document.getElementById('message');
+
+searchForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  message.textContent = '';
+
+  try {
+    const res = await fetch(`/api/flight/${flightInput.value}`);
+    const data = await res.json();
+
+    if (res.status === 404) {
+      message.textContent = 'Flight not found';
+      return;
+    }
+    if (!res.ok) {
+      message.textContent = 'Flight data is unavailable right now, try again soon.';
+      return;
+    }
+
+    // TODO draw the path
+  } catch (err) {
+    message.textContent = 'Flight data is unavailable right now, try again soon.';
+  }
+});

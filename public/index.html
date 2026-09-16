@@ -8,7 +8,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>Flight Watch</header>
+  <header>
+    <span class="title">Flight Watch</span>
+    <form id="search">
+      <input id="flight" type="text" placeholder="Flight number, e.g. QF144" aria-label="Flight number">
+      <button type="submit">Search</button>
+    </form>
+    <span id="message" role="status"></span>
+  </header>
   <div id="map"></div>
   <footer>For learning only, not for flight planning.</footer>
 
