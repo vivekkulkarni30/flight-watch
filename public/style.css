@@ -10,11 +10,39 @@ body {
 }
 
 header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
   padding: 8px 16px;
   background: #1f3a5f;
   color: white;
+}
+
+header .title {
   font-size: 18px;
   font-weight: bold;
+}
+
+#search {
+  display: flex;
+  gap: 6px;
+}
+
+#search input {
+  width: 220px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+#search button {
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+#message {
+  font-size: 14px;
+  color: #ffd27f;
 }
 
 #map {
@@ -26,4 +54,8 @@ footer {
   background: #f2f2f2;
   color: #555;
   font-size: 12px;
+}
+
+footer a {
+  color: inherit;
 }
