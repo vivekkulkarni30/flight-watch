@@ -34,6 +34,72 @@ Quirks worth knowing about the source:
   `iata_code` column.
 - "Large" and "medium" are OurAirports' own labels, roughly based on traffic, not an official category.
 
+## airlines.csv
+
+Airlines with both their codes, so we can turn a flight number into the callsign a plane broadcasts:
+
+- The **IATA** code is 2 characters and is what's in a flight number on a booking or departures board:
+  `QF` in `QF144`.
+- The **ICAO** code is 3 letters and is what the plane uses in its callsign over the radio: `QFA` in
+  `QFA144`. OpenSky only knows callsigns.
+
+Details:
+
+- **Source:** [OpenFlights](https://openflights.org/data.php), file
+  https://raw.githubusercontent.com/jpatokal/openflights/master/data/airlines.dat
+- **Downloaded:** 2026-09-17
+- **Licence:** Open Database License (ODbL) 1.0. Please keep the credit "Airline data from OpenFlights
+  (openflights.org)". ODbL also says that if we share a changed version of the data, we share it under the
+  same licence; this file is a filtered copy, so it is ODbL too.
+- **Columns:** `iata,icao,name,country`, sorted by `iata`
+  - `country`: the country name as OpenFlights writes it, e.g. `Australia` (not a two-letter code, unlike
+    `airports.csv`)
+- **Size:** 781 airlines (out of 6,162 rows in the source, of which 1,255 are marked active).
+
+To refresh it, download the source file and run:
+
+```
+node scripts/build-airlines.js path/to/airlines.dat
+```
+
+Which airlines we keep: active ones (`Y` in the last column) with a 2-character IATA code and a 3-letter ICAO
+code. That leaves out rows with a blank, `-` or `\N` code, and odd ones like `;;` or `^^`.
+
+**When an IATA code is shared.** 17 IATA codes belong to more than one active airline in the source, mostly
+because a code was handed to a new airline after the old one closed. We keep one airline per code:
+
+- For 9 codes we know which airline flies under the code today, and the script keeps that one (the `CHOSEN`
+  list in `scripts/build-airlines.js`): `1I` NetJets, `5D` Aeromexico Connect, `CC` Air Atlanta Icelandic,
+  `G3` Gol, `LH` Lufthansa (not Lufthansa Cargo), `SQ` Singapore Airlines (not its cargo arm), `TL` Airnorth,
+  `VY` Vueling, `WA` KLM Cityhopper.
+- For the other 8 (`8M C3 CP I9 JL RA ZA ZB`) the script keeps the first one in the source and prints the
+  list, so each refresh shows them again. For `JL` and `RA` it makes no difference: both rows have the same
+  ICAO code. For most of the rest, as far as I can tell, neither airline still flies under that code. The
+  exception is `8M`, Myanmar Airways International: its row has the ICAO code `MMM` and the callsign
+  "assignment postponed", which I don't trust, so the first row (Maxair, `MXL`) stays. Worth a look if
+  someone searches for an 8M flight.
+
+Quirks worth knowing about the source:
+
+- It has **no header line**. The columns are `id,name,alias,iata,icao,callsign,country,active`, and an empty
+  value is written as `\N` (or sometimes `""`).
+- **"Active" is out of date** in places: Ansett Australia and Swissair (both closed in 2002) are still marked
+  active. We can't tell from the file alone, and an extra row does no harm.
+- **ICAO codes can be shared too**: Swiss (`LX`) and Swissair (`SR`) are both `SWR`, Tiger Airways (`TR`) and
+  Tiger Airways Australia (`TT`) both `TGW`. Fine for turning IATA into ICAO; going the other way (callsign to
+  flight number) would need a choice.
+- Some IATA codes contain a digit (`1T`, `5D`, `G3`), so a flight number like `G31234` is `G3` + `1234`.
+- **Callsigns don't always match flight numbers.** Some airlines broadcast a callsign whose number (or
+  letters) differ from the flight number, so swapping the airline code won't find those flights. This file
+  can't help with that.
+
+## OpenFlights sample (test fixture)
+
+`test/fixtures/openflights-airlines-sample.dat`: 17 real rows from the OpenFlights `airlines.dat` above, picked
+to test the build script: Qantas, Air New Zealand and 1Time; the rows we leave out ("Unknown" and "Private
+flight" with IATA `-`, 135 Airways with no IATA code, Australian Airlines marked inactive, `ZZ` with no ICAO
+code); the shared codes `G3`, `JL` and `LH`; and Swiss and Swissair, which share `SWR`.
+
 ## OpenSky samples (test fixtures)
 
 Two small real responses from the [OpenSky Network](https://opensky-network.org/) REST API, saved under
