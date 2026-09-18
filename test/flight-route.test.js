@@ -26,15 +26,59 @@ test('GET /api/flight/:number returns the path from lookupFlight', async () => {
   const res = await app.inject({ method: 'GET', url: '/api/flight/QFA1' });
   assert.equal(res.statusCode, 200);
   assert.deepEqual(res.json(), qfa1);
-  assert.deepEqual(asked, ['QFA1']); // passed on as given
+  assert.deepEqual(asked, ['QFA1']); // already a callsign, so passed on as given
   await app.close();
 });
 
-test('GET /api/flight/:number gives 404 when the flight is not found', async () => {
+test('GET /api/flight/:number gives 404 not-found when no plane has that callsign', async () => {
   const app = buildServer({ lookupFlight: async () => null });
-  const res = await app.inject({ method: 'GET', url: '/api/flight/ZZZ999' });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/QF9999' });
   assert.equal(res.statusCode, 404);
   assert.deepEqual(res.json(), { error: 'not-found' });
+  await app.close();
+});
+
+test('GET /api/flight/:number turns a flight number into a callsign before looking it up (issue #7)', async () => {
+  const asked = [];
+  const app = buildServer({
+    lookupFlight: async (callsign) => {
+      asked.push(callsign);
+      return { ...qfa1, callsign };
+    },
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/qf144' });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.json().callsign, 'QFA144');
+  assert.deepEqual(asked, ['QFA144']);
+  await app.close();
+});
+
+test('GET /api/flight/:number ignores spaces around what was typed', async () => {
+  const asked = [];
+  const app = buildServer({
+    lookupFlight: async (callsign) => {
+      asked.push(callsign);
+      return null;
+    },
+  });
+  // The search box sends the text as typed, so " qf144" arrives with a space (%20) in front.
+  await app.inject({ method: 'GET', url: '/api/flight/%20qf144' });
+  assert.deepEqual(asked, ['QFA144']);
+  await app.close();
+});
+
+test('GET /api/flight/:number gives 404 unknown-airline for an airline code we do not know', async () => {
+  const asked = [];
+  const app = buildServer({
+    lookupFlight: async (callsign) => {
+      asked.push(callsign);
+      return qfa1;
+    },
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/ZZ1' });
+  assert.equal(res.statusCode, 404);
+  assert.deepEqual(res.json(), { error: 'unknown-airline' });
+  assert.deepEqual(asked, []); // no need to ask OpenSky
   await app.close();
 });
 

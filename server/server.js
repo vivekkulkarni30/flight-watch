@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { log } from './log.js';
 import { loadAirports } from './feeds/airports.js';
+import { toCallsign } from './feeds/airlines.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -26,16 +27,18 @@ export function buildServer(options = {}) {
   );
 
   // A flight's path: { callsign, icao24, points: [{ t, lat, lon, altM }] }.
-  // The number goes to the lookup exactly as typed.
+  // People type a flight number (QF144), but planes broadcast a callsign (QFA144), so convert first.
+  // 404 unknown-airline: we don't know that airline code. 404 not-found: no plane is using that callsign now.
   app.get('/api/flight/:number', async (request, reply) => {
-    const { number } = request.params;
+    const callsign = toCallsign(request.params.number);
+    if (!callsign) return reply.code(404).send({ error: 'unknown-airline' });
     let path;
     try {
-      path = await lookupFlight(number);
+      path = await lookupFlight(callsign);
     } catch (err) {
       // Catch it here: left alone, Fastify sends OpenSky's own status (a 503, say) back to the browser,
       // which reads as if our server were down. 502 says "the server is fine, the feed behind it isn't".
-      log.error(`flight lookup for ${number} failed: OpenSky status ${err.status ?? 'unknown'} (${err.message})`);
+      log.error(`flight lookup for ${callsign} failed: OpenSky status ${err.status ?? 'unknown'} (${err.message})`);
       return reply.code(502).send({ error: 'feed-unavailable' });
     }
     if (!path) return reply.code(404).send({ error: 'not-found' });
