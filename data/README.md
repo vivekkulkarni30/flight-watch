@@ -124,3 +124,54 @@ Quirks worth knowing about the source:
 - Tracks have gaps where no receiver hears the plane. QFA145 has none for 95 minutes over the Tasman Sea, so a
   line drawn through its points jumps straight across.
 - Anonymous requests are rate limited. When OpenSky says no, it answers 429 (Too Many Requests).
+
+## SIGMET sample (test fixture)
+
+A SIGMET is an official warning to pilots about dangerous weather or volcanic ash in one area for a few hours.
+Each country's weather office issues them for its own airspace regions, called FIRs (flight information
+regions, e.g. "ROMA FIR" for central and southern Italy).
+
+`test/fixtures/sigmets-sample.json`: 9 real SIGMETs from the aviationweather.gov international SIGMET feed,
+trimmed from 133. Fetched 2026-10-30 15:18 AEDT (04:18 UTC).
+
+- **Source:** https://aviationweather.gov/api/data/isigmet?format=json (the
+  [Aviation Weather Center](https://aviationweather.gov/data/api/), part of the US National Weather Service).
+- **Licence:** US government work, free to use. We credit it as "Warnings from aviationweather.gov".
+- **Kept:** volcanic ash from Etna over Rome (the observed area `1` and the forecast area `1F`), mountain waves
+  over Ireland (Shannon), turbulence over Western Australia (Melbourne, its polygon isn't closed), tropical
+  cyclone In-Fa near Guam (Oakland Oceanic), thunderstorms over Brazzaville (sent twice), volcanic ash from
+  Sakurajima given as a single point, and icing over Magadan, which crosses the date line.
+
+Each SIGMET is an object. The fields we use:
+
+| Field | Example | Notes |
+|---|---|---|
+| `firId`, `firName` | `LIRR`, `LIRR ROMA` | `firName` usually starts with the FIR code, but not always (`OAKLAND OCEANIC`) |
+| `seriesId` | `1`, `1F`, `TANGO 31` | The SIGMET's number within its FIR. Not unique on its own |
+| `hazard` | `VA` | `TS` thunderstorms, `TURB` turbulence, `ICE` icing, `VA` volcanic ash, `TC` tropical cyclone, `MTW` mountain waves |
+| `qualifier` | `ERUPTION MT ETNA`, `SEV`, `IN-FA` | Severity (`SEV`, `EMBD`...), the volcano, or the cyclone's name. Can be `null` |
+| `validTimeFrom`, `validTimeTo` | `1793319000` | **Unix seconds**, not ISO strings |
+| `geom` | `AREA` | `AREA` (one shape) or `AREAS` (several) |
+| `coords` | `[{ "lon": 15.45, "lat": 37.367 }, ...]` | See the quirks below |
+| `base`, `top` | `0`, `13000` | Feet. Either can be `null` |
+| `rawSigmet` | | The original text message, as pilots read it |
+
+Quirks worth knowing about the source:
+
+- **Longitude comes first** in each point (`{ "lon": ..., "lat": ... }`), while Leaflet and the rest of our
+  code use `[lat, lon]`. The feed module swaps them.
+- **Most polygons repeat their first point at the end** (117 of 133), but not all: Melbourne's `V15` stops
+  one corner short. Leaflet closes a polygon by itself, so the feed module drops the repeated point.
+- **`geom: "AREAS"` gives a list of polygons**, not a list of points. 3 of 133 used it.
+- **The date line:** Magadan's `AREAS` warnings are cut at 180°. Part of the area is given with longitudes
+  above 180 (up to 190.5, which is -169.5 the usual way), so longitudes have to be brought back into
+  -180 to 180.
+- **Some warnings are a single point**, not an area: the Sakurajima ash cloud (`RJJJ` `R02`) has one point
+  in `coords`, even though `geom` says `AREA`. There's nothing to draw as a polygon.
+- **A forecast area has its own entry.** When a SIGMET gives both where the hazard is now and where it's
+  expected to be, the feed sends two entries with the same `rawSigmet`: `1` (now) and `1F` (forecast).
+- **The same SIGMET can come twice.** Brazzaville's `A1` arrived twice, four minutes apart (`receiptTime`),
+  the first with a mistake in its header. Same FIR, number and valid time, so we keep the later one.
+- A **204** (No Content) means there are no SIGMETs to give, with an empty body (so don't read it as JSON).
+- **Limits:** the API asks for at most 100 requests a minute and a User-Agent naming the app. It doesn't allow
+  calls from a browser, so we fetch it from the server.
