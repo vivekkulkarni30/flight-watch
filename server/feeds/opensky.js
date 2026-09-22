@@ -18,18 +18,27 @@ async function getJson(url, fetch) {
   return res.json();
 }
 
+// Every aircraft OpenSky can see right now: the states array from states/all (one array per aircraft, see above).
+// The server keeps these in memory (see server.js) so a flight search doesn't have to ask for them each time.
+export async function fetchStates({ fetch = globalThis.fetch } = {}) {
+  const { states } = await getJson(`${API}/states/all`, fetch);
+  return states ?? [];
+}
+
 // Find the aircraft broadcasting this callsign (e.g. 'QFA144') and return its path so far:
 //   { callsign, icao24, points: [{ t, lat, lon, altM }] }
 // t is Unix seconds, altM the barometric altitude in metres. Returns null if no aircraft has that callsign.
 // Throws an Error with .status (e.g. 429) if OpenSky answers with anything but 200.
-// Pass your own fetch to test without the network.
-export async function lookupFlight(callsign, { fetch = globalThis.fetch } = {}) {
-  const { states } = await getJson(`${API}/states/all`, fetch);
-
-  // Each state is an array: [0] is the icao24, [1] the callsign padded with spaces (or null).
-  const state = (states ?? []).find((s) => s[1]?.trim() === callsign);
-  if (!state) return null;
-  const icao24 = state[0];
+// Pass your own fetch to test without the network. If you already know the aircraft's icao24 (from states
+// kept in memory), pass it too and we skip the states/all request.
+export async function lookupFlight(callsign, { fetch = globalThis.fetch, icao24 } = {}) {
+  if (!icao24) {
+    const states = await fetchStates({ fetch });
+    // Each state is an array: [0] is the icao24, [1] the callsign padded with spaces (or null).
+    const state = states.find((s) => s[1]?.trim() === callsign);
+    if (!state) return null;
+    icao24 = state[0];
+  }
 
   // Each track point is [time, lat, lon, baroAltitudeM, trueTrack, onGround]; we keep the first four.
   const track = await getJson(`${API}/tracks/all?icao24=${icao24}&time=0`, fetch);

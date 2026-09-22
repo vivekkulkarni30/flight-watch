@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { lookupFlight } from '../server/feeds/opensky.js';
+import { fetchStates, lookupFlight } from '../server/feeds/opensky.js';
 
 // Real OpenSky responses, trimmed (see data/README.md).
 const states = JSON.parse(readFileSync(new URL('./fixtures/opensky-states-sample.json', import.meta.url)));
@@ -67,4 +67,20 @@ test('lookupFlight throws with status 429 and logs a WARN when OpenSky refuses',
 
   const logged = readFileSync(process.env.LOG_FILE, 'utf8');
   assert.match(logged, /WARN  opensky feed returned 429/);
+});
+
+test('fetchStates returns every aircraft state from states/all', async () => {
+  const { fetch, urls } = fakeFetch();
+  const all = await fetchStates({ fetch });
+  assert.equal(all.length, 5);
+  assert.equal(all[0][1], 'QFA145  ');
+  assert.deepEqual(urls, ['https://opensky-network.org/api/states/all']);
+});
+
+test('lookupFlight skips states/all when it is given the icao24', async () => {
+  const { fetch, urls } = fakeFetch();
+  const path = await lookupFlight('QFA145', { fetch, icao24: '7c5324' });
+  assert.equal(path.icao24, '7c5324');
+  assert.equal(path.points.length, 20);
+  assert.deepEqual(urls, ['https://opensky-network.org/api/tracks/all?icao24=7c5324&time=0']);
 });
