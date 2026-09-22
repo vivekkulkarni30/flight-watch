@@ -36,12 +36,28 @@ export async function fetchSigmets({ fetch = globalThis.fetch } = {}) {
     err.status = res.status;
     throw err;
   }
-  return (await res.json()).flatMap(toWarnings);
+  return latestCopies(await res.json()).flatMap(toWarnings);
+}
+
+// The same SIGMET (same FIR, number and start time) can arrive twice, e.g. resent to fix a typo in its
+// header. Keep the copy received last.
+function latestCopies(sigmets) {
+  const byKey = new Map();
+  for (const s of sigmets) {
+    const key = sigmetId(s);
+    const seen = byKey.get(key);
+    if (!seen || s.receiptTime > seen.receiptTime) byKey.set(key, s); // ISO times sort as text
+  }
+  return [...byKey.values()];
+}
+
+function sigmetId(s) {
+  return `${s.firId}-${s.seriesId}-${s.validTimeFrom}`;
 }
 
 // One SIGMET from the feed becomes one Warning per polygon: usually one, several for geom "AREAS".
 function toWarnings(s) {
-  const id = `${s.firId}-${s.seriesId}-${s.validTimeFrom}`;
+  const id = sigmetId(s);
   const polygons = (s.geom === 'AREAS' ? s.coords : [s.coords]).map(toPolygon);
 
   const warnings = [];
@@ -56,7 +72,7 @@ function toWarnings(s) {
       kind: 'sigmet',
       hazard: s.hazard,
       level: null,
-      name: `${HAZARD_NAMES[s.hazard] ?? s.hazard}, ${firName(s)} FIR`,
+      name: warningName(s),
       validFrom: new Date(s.validTimeFrom * 1000).toISOString(), // the feed gives Unix seconds
       validTo: new Date(s.validTimeTo * 1000).toISOString(),
       shape: { type: 'polygon', coords },
@@ -79,6 +95,16 @@ function toPolygon(points) {
   const [first, last] = [coords[0], coords.at(-1)];
   if (coords.length > 1 && first[0] === last[0] && first[1] === last[1]) coords.pop();
   return coords;
+}
+
+// "Volcanic ash, ROMA FIR". A tropical cyclone gets its name ("Tropical cyclone IN-FA, ...").
+// The feed sends a forecast area (where the hazard is expected later) as its own entry, with F after the
+// number: "1F" next to "1", "TANGO 31F" next to "TANGO 31".
+function warningName(s) {
+  let hazard = HAZARD_NAMES[s.hazard] ?? s.hazard;
+  if (s.hazard === 'TC' && s.qualifier) hazard += ` ${s.qualifier}`;
+  const forecast = /\dF$/.test(s.seriesId) ? ' (forecast area)' : '';
+  return `${hazard}, ${firName(s)} FIR${forecast}`;
 }
 
 // "LIRR ROMA" becomes "ROMA". Some names have no code in front ("OAKLAND OCEANIC"); keep those as they are.

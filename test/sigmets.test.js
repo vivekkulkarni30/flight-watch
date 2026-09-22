@@ -100,7 +100,7 @@ test('fetchSigmets gives readable names, without the FIR code twice', async (t) 
   assert.ok(names.has('Turbulence, MELBOURNE FIR'));
   assert.ok(names.has('Thunderstorms, BRAZZAVILLE FIR'));
   assert.ok(names.has('Icing, MAGADAN FIR'));
-  assert.ok(names.has('Tropical cyclone, OAKLAND OCEANIC FIR')); // no FIR code in front of this one
+  assert.ok(names.has('Tropical cyclone IN-FA, OAKLAND OCEANIC FIR')); // no FIR code in front of this one
 });
 
 test('fetchSigmets keeps a polygon that is not closed (Melbourne V15) with all its corners', async (t) => {
@@ -147,4 +147,22 @@ test('fetchSigmets throws with status 500 and logs a WARN when the feed fails', 
   const { fetch } = fakeFetch(500, 'Internal Server Error');
   await assert.rejects(fetchSigmets({ fetch }), (err) => err.status === 500);
   assert.match(readLog(), /WARN  sigmet feed returned 500/);
+});
+
+test('fetchSigmets keeps one copy of a SIGMET sent twice (Brazzaville A1), so every id is unique', async (t) => {
+  captureLog(t);
+  const { fetch } = fakeFetch();
+  const warnings = await fetchSigmets({ fetch });
+  const ids = warnings.map((w) => w.id);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(ids.filter((id) => id.startsWith('FCCC-A1-')).length, 1);
+});
+
+test('fetchSigmets says when an area is a forecast, and names the cyclone', async (t) => {
+  captureLog(t);
+  const { fetch } = fakeFetch();
+  const byId = new Map((await fetchSigmets({ fetch })).map((w) => [w.id, w]));
+  assert.equal(byId.get('LIRR-1F-1793319000').name, 'Volcanic ash, ROMA FIR (forecast area)');
+  assert.equal(byId.get('LIRR-1-1793319000').name, 'Volcanic ash, ROMA FIR');
+  assert.equal(byId.get('KZAK-TANGO 31-1793323200').name, 'Tropical cyclone IN-FA, OAKLAND OCEANIC FIR');
 });
