@@ -114,3 +114,61 @@ test('GET /api/flight/:number gives 502 and logs an error when OpenSky fails', a
   assert.match(log, /ERROR .*QFA1.*503/);
   await app.close();
 });
+
+// Aircraft states as the poller keeps them: the states array from OpenSky's states/all.
+// [0] icao24, [1] callsign (padded), [3] time of position, [5] lon, [6] lat, [7] altitude in metres.
+const warmStates = [
+  ['7c6b2d', 'QFA1    ', 'Australia', 1757902800, 1757902800, 148.9, -31.2, 11280, false],
+  ['7c806a', 'QFA10   ', 'Australia', 1757902801, 1757902801, 115.97, -31.91, 121.92, false],
+];
+const warmPoller = { latest: (name) => (name === 'opensky-states' ? warmStates : undefined) };
+
+test('GET /api/flight/:number uses the states in memory when warm: asks only for the track, adds the latest position', async () => {
+  const asked = [];
+  const app = buildServer({
+    poller: warmPoller,
+    lookupFlight: async (callsign, options) => {
+      asked.push([callsign, options]);
+      return qfa1;
+    },
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/QF1' });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(asked, [['QFA1', { icao24: '7c6b2d' }]]); // icao24 known, so no states/all request
+  const points = res.json().points;
+  assert.equal(points.length, 3);
+  assert.deepEqual(points.at(-1), { t: 1757902800, lat: -31.2, lon: 148.9, altM: 11280 });
+  await app.close();
+});
+
+test('GET /api/flight/:number gives 404 not-found straight away when warm and no plane has that callsign', async () => {
+  const asked = [];
+  const app = buildServer({
+    poller: warmPoller,
+    lookupFlight: async (callsign) => {
+      asked.push(callsign);
+      return qfa1;
+    },
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/QF144' });
+  assert.equal(res.statusCode, 404);
+  assert.deepEqual(res.json(), { error: 'not-found' });
+  assert.deepEqual(asked, []); // no need to ask OpenSky
+  await app.close();
+});
+
+test('GET /api/flight/:number asks OpenSky as before when the states are not in yet', async () => {
+  const asked = [];
+  const app = buildServer({
+    poller: { latest: () => undefined },
+    lookupFlight: async (callsign, options) => {
+      asked.push([callsign, options]);
+      return qfa1;
+    },
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/QF1' });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.json(), qfa1);
+  assert.deepEqual(asked, [['QFA1', undefined]]);
+  await app.close();
+});
