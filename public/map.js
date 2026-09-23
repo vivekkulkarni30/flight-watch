@@ -64,8 +64,12 @@ searchForm.addEventListener('submit', async (event) => {
   // Clear the old flight first, so a 404 or 502 doesn't leave it looking like the answer.
   clearFlight();
 
+  // Trim spaces and encode the text, so a / or ? typed in the box can't change the request.
+  const flightNumber = flightInput.value.trim();
+  if (!flightNumber) return;
+
   try {
-    const res = await fetch(`/api/flight/${flightInput.value}`);
+    const res = await fetch(`/api/flight/${encodeURIComponent(flightNumber)}`);
     const data = await res.json();
 
     if (res.status === 404) {
