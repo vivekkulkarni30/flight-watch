@@ -6,6 +6,8 @@
 //   poller.stopPolling()       // stop all the timers
 //
 // If a fetch fails we log a WARN and keep the previous data: slightly old warnings beat no warnings.
+// A good fetch is logged (INFO) only when the number of items changes, so the log isn't one line a minute
+// saying the same thing.
 
 // How many things came back, for the log line (an array's length, a Map's size).
 const countOf = (data) => data?.length ?? data?.size ?? '?';
@@ -18,8 +20,9 @@ export function startPolling({ sources, log }) {
   async function poll(source) {
     try {
       const data = await source.fetch();
+      const changed = !results.has(source.name) || countOf(results.get(source.name)) !== countOf(data);
       results.set(source.name, data);
-      log.info(`${source.name}: fetched ${countOf(data)} items`);
+      if (changed) log.info(`${source.name}: fetched ${countOf(data)} items`);
     } catch (err) {
       const kept = results.has(source.name) ? `keeping previous data (${countOf(results.get(source.name))} items)` : 'no data yet';
       log.warn(`${source.name}: fetch failed with status ${err.status ?? 'unknown'}, ${kept} (${err.message})`);

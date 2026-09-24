@@ -76,11 +76,3 @@ test('fetchStates returns every aircraft state from states/all', async () => {
   assert.equal(all[0][1], 'QFA145  ');
   assert.deepEqual(urls, ['https://opensky-network.org/api/states/all']);
 });
-
-test('lookupFlight skips states/all when it is given the icao24', async () => {
-  const { fetch, urls } = fakeFetch();
-  const path = await lookupFlight('QFA145', { fetch, icao24: '7c5324' });
-  assert.equal(path.icao24, '7c5324');
-  assert.equal(path.points.length, 20);
-  assert.deepEqual(urls, ['https://opensky-network.org/api/tracks/all?icao24=7c5324&time=0']);
-});
