@@ -86,3 +86,95 @@ searchForm.addEventListener('submit', async (event) => {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
 });
+
+// Warning areas (SIGMETs): storms, turbulence, icing and so on, drawn as coloured shapes.
+// Asked for when the page loads and again every minute.
+
+// The colour and the words for each kind of hazard.
+function hazardStyle(hazard) {
+  if (hazard === 'TS') {
+    return { color: '#7b2cbf', label: 'Thunderstorms' };
+  }
+  if (hazard === 'TURB') {
+    return { color: '#f08c00', label: 'Turbulence' };
+  }
+  if (hazard === 'ICE') {
+    return { color: '#f08c00', label: 'Icing' };
+  }
+  if (hazard === 'VA') {
+    return { color: '#868e96', label: 'Volcanic ash' };
+  }
+  if (hazard === 'TC') {
+    return { color: '#e03131', label: 'Tropical cyclone' };
+  }
+  if (hazard === 'MTW') {
+    return { color: '#8b5a2b', label: 'Mountain waves' };
+  }
+  return { color: '#fcc419', label: 'Other hazard' };
+}
+
+// The warning shapes currently on the map, so the next refresh can replace them.
+let warningLayer = null;
+
+// "Valid until" in the viewer's own time, e.g. "Wed 24 Sep, 3:00 pm".
+function formatTime(iso) {
+  return new Date(iso).toLocaleString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function drawWarnings(warnings) {
+  const shapes = [];
+  for (const warning of warnings) {
+    if (warning.shape?.type !== 'polygon') continue;
+    const style = hazardStyle(warning.hazard);
+    const polygon = L.polygon(warning.shape.coords, {
+      color: style.color,
+      weight: 1,
+      fillColor: style.color,
+      fillOpacity: 0.3,
+    }).bindTooltip(`${warning.name}<br>${style.label}<br>Valid until ${formatTime(warning.validTo)}`);
+    shapes.push(polygon);
+  }
+
+  // Swap the old layer for the new one in one go.
+  if (warningLayer) warningLayer.remove();
+  warningLayer = L.layerGroup(shapes).addTo(map);
+}
+
+// If the request fails, keep whatever shapes are already on the map.
+async function showWarnings() {
+  try {
+    const res = await fetch('/api/warnings');
+    if (!res.ok) return;
+    const warnings = await res.json();
+    drawWarnings(warnings);
+  } catch (err) {
+    // Keep the last shapes.
+  }
+}
+
+showWarnings();
+setInterval(showWarnings, 60 * 1000);
+
+// A small legend in the bottom-left corner so people know what the colours mean.
+const legend = L.control({ position: 'bottomleft' });
+legend.onAdd = function () {
+  const div = L.DomUtil.create('div', 'legend');
+  div.innerHTML = `
+    <strong>Warnings</strong>
+    <div><span class="swatch" style="background:#7b2cbf"></span>Thunderstorms</div>
+    <div><span class="swatch" style="background:#f08c00"></span>Turbulence</div>
+    <div><span class="swatch" style="background:#74c0fc"></span>Icing</div>
+    <div><span class="swatch" style="background:#868e96"></span>Volcanic ash</div>
+    <div><span class="swatch" style="background:#e03131"></span>Tropical cyclone</div>
+    <div><span class="swatch" style="background:#8b5a2b"></span>Mountain waves</div>
+    <div><span class="swatch" style="background:#fcc419"></span>Other</div>
+  `;
+  return div;
+};
+legend.addTo(map);
