@@ -48,6 +48,20 @@ test('fetches again every everySeconds and keeps the newest result', async (t) =
   assert.ok(poller.latest('counter')[0] >= 2);
 });
 
+test('logs an INFO line only when the number of items changes, to keep the log readable', async (t) => {
+  const log = fakeLog();
+  const answers = [['storm', 'ash'], ['storm', 'ash'], ['storm', 'ash'], ['storm']];
+  let calls = 0;
+  const poller = startPolling({
+    log,
+    sources: [{ name: 'sigmets', everySeconds: 0.01, fetch: async () => answers[Math.min(calls++, answers.length - 1)] }],
+  });
+  t.after(() => poller.stopPolling());
+
+  await waitFor(() => calls >= 6);
+  assert.deepEqual(log.lines, ['INFO sigmets: fetched 2 items', 'INFO sigmets: fetched 1 items']);
+});
+
 test('a failing fetch keeps the previous data and logs a WARN with the status', async (t) => {
   const log = fakeLog();
   let calls = 0;
