@@ -90,27 +90,20 @@ searchForm.addEventListener('submit', async (event) => {
 // Warning areas (SIGMETs): storms, turbulence, icing and so on, drawn as coloured shapes.
 // Asked for when the page loads and again every minute.
 
-// The colour and the words for each kind of hazard.
+// The colour and the words for each kind of hazard. The shapes and the legend both read from
+// this one table, so they can't disagree.
+const HAZARDS = {
+  TS: { color: '#7b2cbf', label: 'Thunderstorms' },
+  TURB: { color: '#f08c00', label: 'Turbulence' },
+  ICE: { color: '#74c0fc', label: 'Icing' },
+  VA: { color: '#868e96', label: 'Volcanic ash' },
+  TC: { color: '#e03131', label: 'Tropical cyclone' },
+  MTW: { color: '#8b5a2b', label: 'Mountain waves' },
+};
+const OTHER_HAZARD = { color: '#fcc419', label: 'Other hazard' };
+
 function hazardStyle(hazard) {
-  if (hazard === 'TS') {
-    return { color: '#7b2cbf', label: 'Thunderstorms' };
-  }
-  if (hazard === 'TURB') {
-    return { color: '#f08c00', label: 'Turbulence' };
-  }
-  if (hazard === 'ICE') {
-    return { color: '#f08c00', label: 'Icing' };
-  }
-  if (hazard === 'VA') {
-    return { color: '#868e96', label: 'Volcanic ash' };
-  }
-  if (hazard === 'TC') {
-    return { color: '#e03131', label: 'Tropical cyclone' };
-  }
-  if (hazard === 'MTW') {
-    return { color: '#8b5a2b', label: 'Mountain waves' };
-  }
-  return { color: '#fcc419', label: 'Other hazard' };
+  return HAZARDS[hazard] ?? OTHER_HAZARD;
 }
 
 // The warning shapes currently on the map, so the next refresh can replace them.
@@ -165,16 +158,10 @@ setInterval(showWarnings, 60 * 1000);
 const legend = L.control({ position: 'bottomleft' });
 legend.onAdd = function () {
   const div = L.DomUtil.create('div', 'legend');
-  div.innerHTML = `
-    <strong>Warnings</strong>
-    <div><span class="swatch" style="background:#7b2cbf"></span>Thunderstorms</div>
-    <div><span class="swatch" style="background:#f08c00"></span>Turbulence</div>
-    <div><span class="swatch" style="background:#74c0fc"></span>Icing</div>
-    <div><span class="swatch" style="background:#868e96"></span>Volcanic ash</div>
-    <div><span class="swatch" style="background:#e03131"></span>Tropical cyclone</div>
-    <div><span class="swatch" style="background:#8b5a2b"></span>Mountain waves</div>
-    <div><span class="swatch" style="background:#fcc419"></span>Other</div>
-  `;
+  const rows = [...Object.values(HAZARDS), OTHER_HAZARD].map(
+    (h) => `<div><span class="swatch" style="background:${h.color}"></span>${h.label}</div>`,
+  );
+  div.innerHTML = `<strong>Warnings</strong>${rows.join('')}`;
   return div;
 };
 legend.addTo(map);
