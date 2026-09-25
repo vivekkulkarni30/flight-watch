@@ -64,8 +64,12 @@ searchForm.addEventListener('submit', async (event) => {
   // Clear the old flight first, so a 404 or 502 doesn't leave it looking like the answer.
   clearFlight();
 
+  // Trim spaces and encode the text, so a / or ? typed in the box can't change the request.
+  const flightNumber = flightInput.value.trim();
+  if (!flightNumber) return;
+
   try {
-    const res = await fetch(`/api/flight/${flightInput.value}`);
+    const res = await fetch(`/api/flight/${encodeURIComponent(flightNumber)}`);
     const data = await res.json();
 
     if (res.status === 404) {
@@ -82,3 +86,82 @@ searchForm.addEventListener('submit', async (event) => {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
 });
+
+// Warning areas (SIGMETs): storms, turbulence, icing and so on, drawn as coloured shapes.
+// Asked for when the page loads and again every minute.
+
+// The colour and the words for each kind of hazard. The shapes and the legend both read from
+// this one table, so they can't disagree.
+const HAZARDS = {
+  TS: { color: '#7b2cbf', label: 'Thunderstorms' },
+  TURB: { color: '#f08c00', label: 'Turbulence' },
+  ICE: { color: '#74c0fc', label: 'Icing' },
+  VA: { color: '#868e96', label: 'Volcanic ash' },
+  TC: { color: '#e03131', label: 'Tropical cyclone' },
+  MTW: { color: '#8b5a2b', label: 'Mountain waves' },
+};
+const OTHER_HAZARD = { color: '#fcc419', label: 'Other hazard' };
+
+function hazardStyle(hazard) {
+  return HAZARDS[hazard] ?? OTHER_HAZARD;
+}
+
+// The warning shapes currently on the map, so the next refresh can replace them.
+let warningLayer = null;
+
+// "Valid until" in the viewer's own time, e.g. "Wed 24 Sep, 3:00 pm".
+function formatTime(iso) {
+  return new Date(iso).toLocaleString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function drawWarnings(warnings) {
+  const shapes = [];
+  for (const warning of warnings) {
+    if (warning.shape?.type !== 'polygon') continue;
+    const style = hazardStyle(warning.hazard);
+    const polygon = L.polygon(warning.shape.coords, {
+      color: style.color,
+      weight: 1,
+      fillColor: style.color,
+      fillOpacity: 0.3,
+    }).bindTooltip(`${warning.name}<br>${style.label}<br>Valid until ${formatTime(warning.validTo)}`);
+    shapes.push(polygon);
+  }
+
+  // Swap the old layer for the new one in one go.
+  if (warningLayer) warningLayer.remove();
+  warningLayer = L.layerGroup(shapes).addTo(map);
+}
+
+// If the request fails, keep whatever shapes are already on the map.
+async function showWarnings() {
+  try {
+    const res = await fetch('/api/warnings');
+    if (!res.ok) return;
+    const warnings = await res.json();
+    drawWarnings(warnings);
+  } catch (err) {
+    // Keep the last shapes.
+  }
+}
+
+showWarnings();
+setInterval(showWarnings, 60 * 1000);
+
+// A small legend in the bottom-left corner so people know what the colours mean.
+const legend = L.control({ position: 'bottomleft' });
+legend.onAdd = function () {
+  const div = L.DomUtil.create('div', 'legend');
+  const rows = [...Object.values(HAZARDS), OTHER_HAZARD].map(
+    (h) => `<div><span class="swatch" style="background:${h.color}"></span>${h.label}</div>`,
+  );
+  div.innerHTML = `<strong>Warnings</strong>${rows.join('')}`;
+  return div;
+};
+legend.addTo(map);
