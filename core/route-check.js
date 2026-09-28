@@ -66,3 +66,39 @@ export function kmFromSegment(p, a, b) {
   const along = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, (px * bx + py * by) / lengthSquared));
   return Math.hypot(px - along * bx, py - along * by);
 }
+
+// The warnings a flight's path passes through, or comes within bufferKm of.
+//   path:     { callsign, icao24, points: [{ t, lat, lon, altM }] }
+//   warnings: [{ id, kind, hazard, ..., shape: { type: 'polygon', coords: [[lat, lon], ...] } }]
+// Only polygon shapes are checked; any other shape type is skipped.
+// TODO: this doesn't look at validFrom/validTo yet, so a warning counts even if it has expired or not
+// started by the time the flight gets there.
+export function warningsOnRoute(path, warnings, { bufferKm = 50 } = {}) {
+  const legs = legsOf(path.points);
+  return warnings.filter(
+    (w) => w.shape?.type === 'polygon' && legs.some(([a, b]) => legNearPolygon(a, b, w.shape.coords, bufferKm)),
+  );
+}
+
+// Consecutive points make the legs. A path with one point is a leg that starts and ends there.
+function legsOf(points) {
+  if (points.length === 1) return [[points[0], points[0]]];
+  return points.slice(1).map((b, i) => [points[i], b]);
+}
+
+// The polygon's edges as pairs of { lat, lon } points, the last corner joining back to the first.
+function edgesOf(coords) {
+  const corners = coords.map(([lat, lon]) => ({ lat, lon }));
+  return corners.map((c, i) => [c, corners[(i + 1) % corners.length]]);
+}
+
+// A leg counts if either end is inside, it crosses an edge, or it comes within bufferKm of an edge.
+function legNearPolygon(a, b, coords, bufferKm) {
+  if (pointInPolygon(a, coords) || pointInPolygon(b, coords)) return true;
+  return edgesOf(coords).some(([c, d]) => segmentsCross(a, b, c, d) || kmBetweenSegments(a, b, c, d) <= bufferKm);
+}
+
+// Shortest distance in km between two legs that don't cross: it's always from an end of one to the other.
+function kmBetweenSegments(a, b, c, d) {
+  return Math.min(kmFromSegment(a, c, d), kmFromSegment(b, c, d), kmFromSegment(c, a, b), kmFromSegment(d, a, b));
+}
