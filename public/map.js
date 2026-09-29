@@ -70,14 +70,24 @@ searchForm.addEventListener('submit', async (event) => {
 
   try {
     const res = await fetch(`/api/flight/${encodeURIComponent(flightNumber)}`);
-    const data = await res.json();
 
+    // Check the status before reading the body: an error page from a proxy isn't JSON,
+    // and res.json() would throw on it.
     if (res.status === 404) {
       message.textContent = 'Flight not found';
       return;
     }
     if (!res.ok) {
       message.textContent = 'Flight data is unavailable right now, try again soon.';
+      return;
+    }
+
+    const data = await res.json();
+
+    // OpenSky can know a flight but have no positions for it yet (it has only just taken off).
+    // Without points there's no path to draw and no last point for the marker.
+    if (!data.points || data.points.length === 0) {
+      message.textContent = 'No position data for this flight yet';
       return;
     }
 
