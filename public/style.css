@@ -96,6 +96,15 @@ main {
   background: #f5f8fc;
 }
 
+#route-list li.empty {
+  color: #666;
+  cursor: default;
+}
+
+#route-list li.empty:hover {
+  background: none;
+}
+
 #route-list .dot {
   display: inline-block;
   width: 10px;

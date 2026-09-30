@@ -205,8 +205,16 @@ function routeItemHtml(warning) {
 }
 
 function showRoutePanel(onRoute) {
-  routeIds = new Set(onRoute?.map((w) => w.id));
-  routeList.innerHTML = onRoute?.map(routeItemHtml).join('');
+  // A server without the route check sends no onRoute at all; treat that the same as an empty list.
+  onRoute = onRoute ?? [];
+  routeIds = new Set(onRoute.map((w) => w.id));
+
+  // An empty list joins to '', which leaves a blank panel, so say so in words instead.
+  if (onRoute.length === 0) {
+    routeList.innerHTML = '<li class="empty">Nothing on your route right now</li>';
+  } else {
+    routeList.innerHTML = onRoute.map(routeItemHtml).join('');
+  }
 
   // Clicking an item zooms the map to that warning's shape.
   routeList.onclick = (event) => {
