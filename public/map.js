@@ -45,6 +45,7 @@ function clearFlight() {
     flightLayer.remove();
     flightLayer = null;
   }
+  hideRoutePanel();
 }
 
 // Draw the flight's path as a line, put a marker on the last point (where the plane is now)
@@ -92,6 +93,7 @@ searchForm.addEventListener('submit', async (event) => {
     }
 
     showFlight(data);
+    showRoutePanel(data.onRoute);
   } catch (err) {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
@@ -119,6 +121,9 @@ function hazardStyle(hazard) {
 // The warning shapes currently on the map, so the next refresh can replace them.
 let warningLayer = null;
 
+// Each warning's shape on the map by its id, so the "On your route" list can find it.
+let polygonsById = new Map();
+
 // "Valid until" in the viewer's own time, e.g. "Wed 24 Sep, 3:00 pm".
 function formatTime(iso) {
   return new Date(iso).toLocaleString(undefined, {
@@ -132,6 +137,7 @@ function formatTime(iso) {
 
 function drawWarnings(warnings) {
   const shapes = [];
+  const byId = new Map();
   for (const warning of warnings) {
     if (warning.shape?.type !== 'polygon') continue;
     const style = hazardStyle(warning.hazard);
@@ -142,11 +148,16 @@ function drawWarnings(warnings) {
       fillOpacity: 0.3,
     }).bindTooltip(`${warning.name}<br>${style.label}<br>Valid until ${formatTime(warning.validTo)}`);
     shapes.push(polygon);
+    byId.set(warning.id, polygon);
   }
 
   // Swap the old layer for the new one in one go.
   if (warningLayer) warningLayer.remove();
   warningLayer = L.layerGroup(shapes).addTo(map);
+  polygonsById = byId;
+
+  // The refresh drew fresh shapes, so mark the ones on the route again.
+  highlightRoute();
 }
 
 // If the request fails, keep whatever shapes are already on the map.
@@ -175,3 +186,63 @@ legend.onAdd = function () {
   return div;
 };
 legend.addTo(map);
+
+// "On your route": the warnings near the searched flight's path. The server works out which ones
+// (onRoute in the /api/flight answer); the page lists them on the right and marks them on the map.
+const routePanel = document.getElementById('route-panel');
+const routeToggle = document.getElementById('route-toggle');
+const routeList = document.getElementById('route-list');
+
+// The ids of the warnings on the current flight's route, so a refresh can highlight them again.
+let routeIds = new Set();
+
+function routeItemHtml(warning) {
+  const style = hazardStyle(warning.hazard);
+  return `<li data-id="${warning.id}">
+    <span class="dot" style="background:${style.color}"></span>${style.label}: ${warning.name}
+    <div class="until">until ${formatTime(warning.validTo)}</div>
+  </li>`;
+}
+
+function showRoutePanel(onRoute) {
+  routeIds = new Set(onRoute?.map((w) => w.id));
+  routeList.innerHTML = onRoute?.map(routeItemHtml).join('');
+
+  // Clicking an item zooms the map to that warning's shape.
+  routeList.onclick = (event) => {
+    const item = event.target.closest('li');
+    if (!item) return;
+    const warning = onRoute.find((w) => w.id === item.dataset.id);
+    if (warning?.shape?.type === 'polygon') {
+      map.fitBounds(L.polygon(warning.shape.coords).getBounds(), { padding: [40, 40] });
+    }
+  };
+
+  routePanel.hidden = false;
+  map.invalidateSize(); // the map got narrower
+  highlightRoute();
+}
+
+function hideRoutePanel() {
+  routeIds = new Set();
+  routeList.innerHTML = '';
+  routePanel.hidden = true;
+  map.invalidateSize();
+  highlightRoute();
+}
+
+// Thicker outline and stronger fill for the warnings on the route; the rest go back to normal.
+function highlightRoute() {
+  for (const [id, polygon] of polygonsById) {
+    const onRoute = routeIds.has(id);
+    polygon.setStyle({ weight: onRoute ? 3 : 1, fillOpacity: onRoute ? 0.5 : 0.3 });
+    if (onRoute) polygon.bringToFront();
+  }
+}
+
+// On a phone the title opens and closes the list (the CSS only hides it on small screens).
+routeToggle.addEventListener('click', () => {
+  const collapsed = routePanel.classList.toggle('collapsed');
+  routeToggle.setAttribute('aria-expanded', String(!collapsed));
+  map.invalidateSize();
+});
