@@ -16,8 +16,14 @@
     </form>
     <span id="message" role="status"></span>
   </header>
-  <div id="map"></div>
-  <footer>For learning only, not for flight planning. · Flight data: <a href="https://opensky-network.org">OpenSky Network</a> · Airports: <a href="https://ourairports.com">OurAirports</a> · Airline data: <a href="https://openflights.org">OpenFlights</a></footer>
+  <main>
+    <div id="map"></div>
+    <aside id="route-panel" hidden>
+      <button id="route-toggle" type="button" aria-expanded="true" aria-controls="route-list">On your route</button>
+      <ul id="route-list"></ul>
+    </aside>
+  </main>
+  <footer>For learning only, not for flight planning. · Flight data: <a href="https://opensky-network.org">OpenSky Network</a> · Airports: <a href="https://ourairports.com">OurAirports</a> · Airline data: <a href="https://openflights.org">OpenFlights</a> · Warnings: <a href="https://aviationweather.gov">aviationweather.gov</a></footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="map.js"></script>

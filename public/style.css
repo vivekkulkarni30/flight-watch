@@ -45,8 +45,107 @@ header .title {
   color: #ffd27f;
 }
 
+main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 #map {
   flex: 1;
+}
+
+/* "On your route": the warnings near the searched flight, on the right of the map. */
+#route-panel {
+  width: 280px;
+  overflow-y: auto;
+  border-left: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+}
+
+#route-panel[hidden] {
+  display: none;
+}
+
+#route-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  background: #f2f2f2;
+  font: inherit;
+  font-weight: bold;
+  text-align: left;
+  cursor: default;
+}
+
+#route-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#route-list li {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+#route-list li:hover {
+  background: #f5f8fc;
+}
+
+#route-list li.empty {
+  color: #666;
+  cursor: default;
+}
+
+#route-list li.empty:hover {
+  background: none;
+}
+
+#route-list .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+}
+
+#route-list .until {
+  color: #666;
+  font-size: 12px;
+}
+
+/* On a phone the panel sits under the map, and the title button opens and closes it. */
+@media (max-width: 700px) {
+  main {
+    flex-direction: column;
+  }
+
+  #route-panel {
+    width: auto;
+    max-height: 40%;
+    border-left: none;
+    border-top: 1px solid #ddd;
+  }
+
+  #route-toggle {
+    cursor: pointer;
+  }
+
+  #route-toggle::after {
+    content: ' B4';
+  }
+
+  #route-panel.collapsed #route-toggle::after {
+    content: ' BE';
+  }
+
+  #route-panel.collapsed #route-list {
+    display: none;
+  }
 }
 
 footer {
