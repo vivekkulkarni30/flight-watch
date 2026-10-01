@@ -151,3 +151,56 @@ test('warningsOnRoute: a path that ends exactly on a corner of the storm counts,
   const toCorner = path(sydney, { lat: -32.5, lon: 153.4 });
   assert.deepEqual(warningsOnRoute(toCorner, [storm], { bufferKm: 0 }), [storm]);
 });
+
+// Several warnings at once ----------------------------------------------------------------------
+
+// Turbulence over Bass Strait, between Melbourne and Tasmania: well south of Sydney to Auckland.
+const bassStraitStorm = sigmet('YMMM-4-1790000000', [[-39, 144], [-39, 148], [-40.5, 148], [-40.5, 144]]);
+// Thunderstorms over the Riau Islands, just south of Singapore.
+const riauStorm = sigmet('WSJC-5-1790000000', [[0.5, 104], [0.5, 105], [-0.5, 105], [-0.5, 104]]);
+
+test('warningsOnRoute: of two warnings, only the one on the route comes back', () => {
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [storm, bassStraitStorm]), [storm]);
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [bassStraitStorm, storm]), [storm]);
+});
+
+test('warningsOnRoute: keeps the order of the warnings list, not the order the flight meets them', () => {
+  // Leaving Singapore, the flight meets the Riau storm first, then the Java Sea one.
+  const result = warningsOnRoute(path(singapore, jakarta), [javaSeaStorm, bassStraitStorm, riauStorm]);
+  assert.deepEqual(result, [javaSeaStorm, riauStorm]);
+});
+
+test('warningsOnRoute: a shape it does not know among polygons is skipped, and the polygons after it are still checked', () => {
+  const line = { ...riauStorm, id: 'line', shape: { type: 'line', coords: [[1, 104], [-6, 107]] } };
+  const point = { ...riauStorm, id: 'point', shape: { type: 'point', coords: [-4, 106] } };
+  const noShape = { ...riauStorm, id: 'no-shape', shape: null };
+  const warnings = [riauStorm, line, storm, point, noShape, javaSeaStorm];
+  assert.deepEqual(warningsOnRoute(path(singapore, jakarta), warnings), [riauStorm, javaSeaStorm]);
+});
+
+// Gaps in the path ------------------------------------------------------------------------------
+
+// Out of range of ground receivers over the ocean, a flight's path can jump thousands of km between
+// two points. The check has to join them up.
+const chennai = { lat: 12.99, lon: 80.17 };
+const kualaLumpur = { lat: 2.74, lon: 101.71 };
+// Thunderstorms over the middle of the Bay of Bengal, more than 1,000 km from either city.
+const bayOfBengalStorm = sigmet('VECF-6-1790000000', [[9, 89], [9, 92], [6, 92], [6, 89]]);
+
+test('warningsOnRoute: Chennai to Kuala Lumpur with no points over the sea still crosses the Bay of Bengal storm', () => {
+  assert.deepEqual(warningsOnRoute(path(chennai, kualaLumpur), [bayOfBengalStorm]), [bayOfBengalStorm]);
+});
+
+const perth = { lat: -31.94, lon: 115.97 };
+const johannesburg = { lat: -26.13, lon: 28.24 };
+// A storm over the southern Indian Ocean, right where Perth to Johannesburg flies: the shortest way
+// round the Earth between them passes 37.6 S, 70.6 E, halfway along.
+const southernOceanStorm = sigmet('FIMM-7-1790000000', [[-36, 68.5], [-36, 72.5], [-39, 72.5], [-39, 68.5]]);
+
+test(
+  'warningsOnRoute: Perth to Johannesburg with no points over the ocean crosses a storm on the way the plane flies',
+  { todo: 'a long gap is joined with a straight line on the flat map, which runs about 950 km north of the real path here' },
+  () => {
+    assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
+  },
+);
