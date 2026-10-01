@@ -110,3 +110,44 @@ test('warningsOnRoute: skips shapes it does not know how to check', () => {
   const circle = { ...storm, id: 'circle', shape: { type: 'circle', centre: [-34, 155], radiusKm: 100 } };
   assert.deepEqual(warningsOnRoute(path(sydney, auckland), [circle, storm]), [storm]);
 });
+
+// Shapes as real feeds draw them ----------------------------------------------------------------
+
+test('warningsOnRoute: a polygon whose last corner repeats the first works the same as one without', () => {
+  // Many feeds close their polygons this way. Ours drops the repeat, but the check shouldn't depend on that.
+  const closedStorm = sigmet('YBBB-1-closed', [...tasmanStorm, tasmanStorm[0]]);
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [closedStorm]), [closedStorm]);
+  assert.deepEqual(warningsOnRoute(path(sydney, melbourne), [closedStorm]), []);
+  assert.deepEqual(warningsOnRoute(path({ lat: -34, lon: 155 }), [closedStorm]), [closedStorm]);
+});
+
+// An L-shaped storm over the South China Sea: one arm runs north along the coast of Vietnam
+// (lon 108 to 111), the other east along the north of Borneo (lat 2 to 5). The open corner between
+// the arms, north-east of them, is clear sky.
+const lShapedStorm = sigmet('WMFC-3-1790000000', [[2, 108], [2, 118], [5, 118], [5, 111], [12, 111], [12, 108]]);
+const manila = { lat: 14.51, lon: 121.02 };
+const kotaKinabalu = { lat: 5.94, lon: 116.05 };
+const hoChiMinhCity = { lat: 10.82, lon: 106.65 };
+
+test('warningsOnRoute: Manila to Kota Kinabalu flies through the open corner of an L-shaped storm, so it is clear', () => {
+  // Inside the box around the L, but about 100 km from the nearest arm. A check that only looked at the
+  // box would wrongly count it.
+  assert.deepEqual(warningsOnRoute(path(manila, kotaKinabalu), [lShapedStorm]), []);
+});
+
+test('warningsOnRoute: Ho Chi Minh City to Manila crosses the western arm of the L-shaped storm', () => {
+  assert.deepEqual(warningsOnRoute(path(hoChiMinhCity, manila), [lShapedStorm]), [lShapedStorm]);
+});
+
+test('warningsOnRoute: a leg that only touches a corner of the storm counts, even with no buffer', () => {
+  // Heading north-east, it passes exactly through the storm's north-west corner (32.5 S, 153.4 E):
+  // west of the storm before it, north of it after.
+  const grazing = path({ lat: -33.5, lon: 152.4 }, { lat: -31.5, lon: 154.4 });
+  assert.deepEqual(warningsOnRoute(grazing, [storm]), [storm]);
+  assert.deepEqual(warningsOnRoute(grazing, [storm], { bufferKm: 0 }), [storm]);
+});
+
+test('warningsOnRoute: a path that ends exactly on a corner of the storm counts, even with no buffer', () => {
+  const toCorner = path(sydney, { lat: -32.5, lon: 153.4 });
+  assert.deepEqual(warningsOnRoute(toCorner, [storm], { bufferKm: 0 }), [storm]);
+});
