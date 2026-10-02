@@ -110,3 +110,97 @@ test('warningsOnRoute: skips shapes it does not know how to check', () => {
   const circle = { ...storm, id: 'circle', shape: { type: 'circle', centre: [-34, 155], radiusKm: 100 } };
   assert.deepEqual(warningsOnRoute(path(sydney, auckland), [circle, storm]), [storm]);
 });
+
+// Shapes as real feeds draw them ----------------------------------------------------------------
+
+test('warningsOnRoute: a polygon whose last corner repeats the first works the same as one without', () => {
+  // Many feeds close their polygons this way. Ours drops the repeat, but the check shouldn't depend on that.
+  const closedStorm = sigmet('YBBB-1-closed', [...tasmanStorm, tasmanStorm[0]]);
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [closedStorm]), [closedStorm]);
+  assert.deepEqual(warningsOnRoute(path(sydney, melbourne), [closedStorm]), []);
+  assert.deepEqual(warningsOnRoute(path({ lat: -34, lon: 155 }), [closedStorm]), [closedStorm]);
+});
+
+// An L-shaped storm over the South China Sea: one arm runs north along the coast of Vietnam
+// (lon 108 to 111), the other east along the north of Borneo (lat 2 to 5). The open corner between
+// the arms, north-east of them, is clear sky.
+const lShapedStorm = sigmet('WMFC-3-1790000000', [[2, 108], [2, 118], [5, 118], [5, 111], [12, 111], [12, 108]]);
+const manila = { lat: 14.51, lon: 121.02 };
+const kotaKinabalu = { lat: 5.94, lon: 116.05 };
+const hoChiMinhCity = { lat: 10.82, lon: 106.65 };
+
+test('warningsOnRoute: Manila to Kota Kinabalu flies through the open corner of an L-shaped storm, so it is clear', () => {
+  // Inside the box around the L, but about 100 km from the nearest arm. A check that only looked at the
+  // box would wrongly count it.
+  assert.deepEqual(warningsOnRoute(path(manila, kotaKinabalu), [lShapedStorm]), []);
+});
+
+test('warningsOnRoute: Ho Chi Minh City to Manila crosses the western arm of the L-shaped storm', () => {
+  assert.deepEqual(warningsOnRoute(path(hoChiMinhCity, manila), [lShapedStorm]), [lShapedStorm]);
+});
+
+test('warningsOnRoute: a leg that only touches a corner of the storm counts, even with no buffer', () => {
+  // Heading north-east, it passes exactly through the storm's north-west corner (32.5 S, 153.4 E):
+  // west of the storm before it, north of it after.
+  const grazing = path({ lat: -33.5, lon: 152.4 }, { lat: -31.5, lon: 154.4 });
+  assert.deepEqual(warningsOnRoute(grazing, [storm]), [storm]);
+  assert.deepEqual(warningsOnRoute(grazing, [storm], { bufferKm: 0 }), [storm]);
+});
+
+test('warningsOnRoute: a path that ends exactly on a corner of the storm counts, even with no buffer', () => {
+  const toCorner = path(sydney, { lat: -32.5, lon: 153.4 });
+  assert.deepEqual(warningsOnRoute(toCorner, [storm], { bufferKm: 0 }), [storm]);
+});
+
+// Several warnings at once ----------------------------------------------------------------------
+
+// Turbulence over Bass Strait, between Melbourne and Tasmania: well south of Sydney to Auckland.
+const bassStraitStorm = sigmet('YMMM-4-1790000000', [[-39, 144], [-39, 148], [-40.5, 148], [-40.5, 144]]);
+// Thunderstorms over the Riau Islands, just south of Singapore.
+const riauStorm = sigmet('WSJC-5-1790000000', [[0.5, 104], [0.5, 105], [-0.5, 105], [-0.5, 104]]);
+
+test('warningsOnRoute: of two warnings, only the one on the route comes back', () => {
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [storm, bassStraitStorm]), [storm]);
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), [bassStraitStorm, storm]), [storm]);
+});
+
+test('warningsOnRoute: keeps the order of the warnings list, not the order the flight meets them', () => {
+  // Leaving Singapore, the flight meets the Riau storm first, then the Java Sea one.
+  const result = warningsOnRoute(path(singapore, jakarta), [javaSeaStorm, bassStraitStorm, riauStorm]);
+  assert.deepEqual(result, [javaSeaStorm, riauStorm]);
+});
+
+test('warningsOnRoute: a shape it does not know among polygons is skipped, and the polygons after it are still checked', () => {
+  const line = { ...riauStorm, id: 'line', shape: { type: 'line', coords: [[1, 104], [-6, 107]] } };
+  const point = { ...riauStorm, id: 'point', shape: { type: 'point', coords: [-4, 106] } };
+  const noShape = { ...riauStorm, id: 'no-shape', shape: null };
+  const warnings = [riauStorm, line, storm, point, noShape, javaSeaStorm];
+  assert.deepEqual(warningsOnRoute(path(singapore, jakarta), warnings), [riauStorm, javaSeaStorm]);
+});
+
+// Gaps in the path ------------------------------------------------------------------------------
+
+// Out of range of ground receivers over the ocean, a flight's path can jump thousands of km between
+// two points. The check has to join them up.
+const chennai = { lat: 12.99, lon: 80.17 };
+const kualaLumpur = { lat: 2.74, lon: 101.71 };
+// Thunderstorms over the middle of the Bay of Bengal, more than 1,000 km from either city.
+const bayOfBengalStorm = sigmet('VECF-6-1790000000', [[9, 89], [9, 92], [6, 92], [6, 89]]);
+
+test('warningsOnRoute: Chennai to Kuala Lumpur with no points over the sea still crosses the Bay of Bengal storm', () => {
+  assert.deepEqual(warningsOnRoute(path(chennai, kualaLumpur), [bayOfBengalStorm]), [bayOfBengalStorm]);
+});
+
+const perth = { lat: -31.94, lon: 115.97 };
+const johannesburg = { lat: -26.13, lon: 28.24 };
+// A storm over the southern Indian Ocean, right where Perth to Johannesburg flies: the shortest way
+// round the Earth between them passes 37.6 S, 70.6 E, halfway along.
+const southernOceanStorm = sigmet('FIMM-7-1790000000', [[-36, 68.5], [-36, 72.5], [-39, 72.5], [-39, 68.5]]);
+
+test(
+  'warningsOnRoute: Perth to Johannesburg with no points over the ocean crosses a storm on the way the plane flies',
+  { todo: 'a long gap is joined with a straight line on the flat map, which runs about 950 km north of the real path here' },
+  () => {
+    assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
+  },
+);
