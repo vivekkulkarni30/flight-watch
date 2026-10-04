@@ -1,0 +1,171 @@
+vnum,name,lat,lon,region
+0,Ungulungwak Hill-Ingrichuak Hill,62.1778,-164.0936,Alaska - Southwest Alaska
+244001,Ta'u Island,-14.23,-169.454,American Samoa
+244010,Ofu-Olosega,-14.175,-169.618,American Samoa
+244020,Tutuila Island,-14.295,-170.7,American Samoa
+284133,Fukujin seamount,21.93,143.47,Northern Mariana Islands
+284135,Kasuga 2,21.6,143.637,Northern Mariana Islands
+284137,Daikoku seamount,21.324,144.194,Northern Mariana Islands
+284140,Farallon de Pajaros,20.53,144.9,Northern Mariana Islands
+284141,Ahyi Seamount,20.437,145.03,Northern Mariana Islands
+284142,Supply Reef,20.13,145.1,Northern Mariana Islands
+284143,Maug Islands,20.02,145.22,Northern Mariana Islands
+284150,Asuncion,19.67,145.4,Northern Mariana Islands
+284160,Agrigan,18.77,145.67,Northern Mariana Islands
+284170,Pagan,18.13,145.8,Northern Mariana Islands
+284180,Alamagan,17.6,145.83,Northern Mariana Islands
+284190,Guguan,17.32,145.85,Northern Mariana Islands
+284191,Zealandia Bank,16.88,145.85,Northern Mariana Islands
+284192,Sarigan,16.708,145.78,Northern Mariana Islands
+284193,South Sarigan seamount,16.58,145.78,Northern Mariana Islands
+284200,Anatahan,16.35,145.67,Northern Mariana Islands
+284201,East Diamante,15.93,145.67,Northern Mariana Islands
+284202,Ruby,15.62,145.57,Northern Mariana Islands
+284210,Esmeralda Bank,15,145.25,Northern Mariana Islands
+311010,Buldir,52.3488,175.909,Alaska - Aleutians
+311020,Kiska,52.1031,177.6035,Alaska - Aleutians
+311030,Segula,52.0138,178.134,Alaska - Aleutians
+311040,Davidof,51.9542,178.326,Alaska - Aleutians
+311050,Little Sitkin,51.9531,178.5356,Alaska - Aleutians
+311060,Semisopochnoi,51.9288,179.5977,Alaska - Aleutians
+311070,Gareloi,51.7892,-178.796,Alaska - Aleutians
+311080,Tanaga,51.884,-178.143,Alaska - Aleutians
+311090,Takawangha,51.867,-178.027,Alaska - Aleutians
+311100,Bobrof,51.9072,-177.4409,Alaska - Aleutians
+311110,Kanaga,51.9242,-177.1623,Alaska - Aleutians
+311111,Moffett,51.937,-176.741,Alaska - Aleutians
+311120,Great Sitkin,52.0765,-176.1109,Alaska - Aleutians
+311130,Kasatochi,52.1693,-175.5113,Alaska - Aleutians
+311140,Koniuji,52.2189,-175.1323,Alaska - Aleutians
+311150,Sergief,52.0533,-174.9521,Alaska - Aleutians
+311160,Atka volcanic complex,52.3309,-174.139,Alaska - Aleutians
+311161,Korovin,52.38167,-174.16527,Alaska - Aleutians
+311180,Seguam,52.316,-172.51,Alaska - Aleutians
+311190,Amukta,52.49419,-171.25476,Alaska - Aleutians
+311200,Chagulak,52.5714,-171.1395,Alaska - Aleutians
+311210,Yunaska,52.649,-170.659,Alaska - Aleutians
+311220,Herbert,52.741,-170.113,Alaska - Aleutians
+311230,Carlisle,52.8906,-170.0576,Alaska - Aleutians
+311240,Cleveland,52.8222,-169.945,Alaska - Aleutians
+311241,Tanax̂ Angunax̂,52.839,-169.758,Alaska - Aleutians
+311250,Uliaga,53.065,-169.767,Alaska - Aleutians
+311260,Kagamil,52.9726,-169.719,Alaska - Aleutians
+311270,Vsevidof,53.1256,-168.6937,Alaska - Aleutians
+311280,Mount Recheshnoi,53.1536,-168.5382,Alaska - Aleutians
+311290,Okmok,53.397,-168.166,Alaska - Aleutians
+311300,Bogoslof,53.9272,-168.0344,Alaska - Aleutians
+311310,Makushin,53.8899,-166.925,Alaska - Aleutians
+311315,Wide Bay cone,53.9611,-166.615,Alaska - Aleutians
+311320,Akutan,54.13308,-165.98555,Alaska - Aleutians
+311340,Westdahl,54.5171,-164.6476,Alaska - Aleutians
+311350,Fisher,54.6692,-164.3524,Alaska - Aleutians
+311360,Shishaldin,54.7554,-163.9711,Alaska - Aleutians
+311370,Isanotski,54.76799,-163.72904,Alaska - Aleutians
+311380,Roundtop,54.7992,-163.5914,Alaska - Aleutians
+311390,Amak,55.41728,-163.14687,Alaska - Alaska Peninsula
+311800,Adagdak,51.9905,-176.5852,Alaska - Aleutians
+312010,Frosty,55.0673,-162.8354,Alaska - Alaska Peninsula
+312011,Dutton,55.1867,-162.2744,Alaska - Alaska Peninsula
+312020,Emmons Lake volcanic center,55.3409,-162.0726,Alaska - Alaska Peninsula
+312030,Pavlof,55.4173,-161.8937,Alaska - Alaska Peninsula
+312040,Pavlof Sister,55.4569,-161.8544,Alaska - Alaska Peninsula
+312050,Dana,55.64205,-161.21551,Alaska - Alaska Peninsula
+312051,Stepovak Bay group,55.9125,-160.041,Alaska - Alaska Peninsula
+312060,Kupreanof,56.0126,-159.7912,Alaska - Alaska Peninsula
+312070,Veniaminof,56.1979,-159.3931,Alaska - Alaska Peninsula
+312080,Black Peak,56.5512,-158.787,Alaska - Alaska Peninsula
+312090,Aniakchak,56.9058,-158.209,Alaska - Alaska Peninsula
+312100,Yantarni,57.0179,-157.1864,Alaska - Alaska Peninsula
+312110,Chiginagak,57.13348,-156.99147,Alaska - Alaska Peninsula
+312120,Kialagvik,57.2019,-156.7467,Alaska - Alaska Peninsula
+312130,Ugashik-Peulik,57.7503,-156.37,Alaska - Alaska Peninsula
+312131,Ukinrek Maars,57.8338,-156.5139,Alaska - Alaska Peninsula
+312132,Alinchak,57.869,-155.422,Alaska - Alaska Peninsula
+312140,Martin,58.1692,-155.3566,Alaska - Alaska Peninsula
+312150,Mageik,58.1946,-155.2544,Alaska - Alaska Peninsula
+312160,Trident,58.2343,-155.1026,Alaska - Alaska Peninsula
+312170,Katmai,58.279,-154.9533,Alaska - Alaska Peninsula
+312180,Novarupta,58.2654,-155.1591,Alaska - Alaska Peninsula
+312190,Griggs,58.3572,-155.1037,Alaska - Alaska Peninsula
+312200,Snowy Mountain,58.3336,-154.6859,Alaska - Alaska Peninsula
+312210,Denison,58.4173,-154.451,Alaska - Alaska Peninsula
+312220,Steller,58.4301,-154.3903,Alaska - Alaska Peninsula
+312230,Kukak,58.4528,-154.3573,Alaska - Alaska Peninsula
+312250,Kaguyak,58.6113,-154.0245,Alaska - Alaska Peninsula
+312260,Fourpeaked,58.7703,-153.6738,Alaska - Alaska Peninsula
+312270,Douglas,58.8596,-153.5351,Alaska - Alaska Peninsula
+313010,Augustine,59.3626,-153.435,Alaska - Cook Inlet-South Central
+313020,Iliamna,60.0319,-153.0918,Alaska - Cook Inlet-South Central
+313030,Redoubt,60.4852,-152.7438,Alaska - Cook Inlet-South Central
+313040,Spurr,61.2989,-152.2539,Alaska - Cook Inlet-South Central
+313050,Hayes,61.5991,-152.4182,Alaska - Cook Inlet-South Central
+314010,Espenberg,66.3493,-164.333,Alaska - Seward Peninsula
+314020,Nunivak Island,60.099,-166.496,Alaska - Southwest Alaska
+314030,Ingakslugwat Hills,61.43,-164.47,Alaska - Southwest Alaska
+314040,St. Michael,63.4493,-162.123,Alaska - Southwest Alaska
+314050,Kookooligit Mountains,63.5991,-170.433,Alaska - Bering Sea
+314060,Imuruk Lake,65.6,-163.92,Alaska - Seward Peninsula
+315001,Buzzard Creek,64.061082,-148.431932,Alaska - Interior Alaska
+315010,Sanford,62.2133,-144.1295,Alaska - Wrangell Volcanic Field
+315020,Wrangell,62.00572,-144.01935,Alaska - Wrangell Volcanic Field
+315021,Gordon,62.1312,-143.0883,Alaska - Wrangell Volcanic Field
+315030,Mount Churchill,61.4187,-141.7152,Alaska - Alaska
+315040,Edgecumbe,57.0509,-135.7611,Alaska - Southeast Alaska
+315050,Duncan Canal,56.4996,-133.102,Alaska - Southeast Alaska
+315060,Tlevak Strait-Suemez Island,55.2496,-133.302,Alaska - Southeast Alaska
+315070,Behm Canal-Rudyerd Bay,55.3196,-131.051,Alaska - Southeast Alaska
+320090,Iskut-Unuk River cones,56.5196,-130.331,Alaska - Southeast Alaska
+321010,Mount Baker,48.777,-121.813,Washington
+321020,Glacier Peak,48.112,-121.113,Washington
+321030,Mount Rainier,46.853,-121.76,Washington
+321040,Mount Adams,46.206,-121.49,Washington
+321050,Mount St. Helens,46.2,-122.18,Washington
+321060,West Crater volcanic field,45.88,-122.08,Washington
+321070,Indian Heaven Volcanic Field,45.93,-121.82,Washington
+322010,Mount Hood,45.374,-121.695,Oregon
+322020,Mount Jefferson,44.674,-121.8,Oregon
+322030,Blue Lake Crater,44.42,-121.77,Oregon
+322040,Sand Mountain volcanic field,44.38,-121.93,Oregon
+322060,Belknap Crater,44.285,-121.841,Oregon
+322070,Three Sisters,44.103,-121.768,Oregon
+322090,Mount Bachelor,43.979,-121.688,Oregon
+322100,Davis Lake volcanic field,43.57,-121.82,Oregon
+322110,Newberry,43.722,-121.229,Oregon
+322120,Devils Garden lava field,43.512,-120.861,Oregon
+322150,Cinnamon Butte,43.241,-122.108,Oregon
+322160,Crater Lake,42.93,-122.12,Oregon
+322170,Diamond Craters volcanic field,43.1,-118.75,Oregon
+322190,Jordan Craters volcanic field,43.15,-117.47,Oregon
+323010,Mount Shasta,41.409,-122.193,California
+323020,Medicine Lake volcano,41.611,-121.554,California
+323080,Lassen Volcanic Center,40.492,-121.508,California
+323100,Clear Lake Volcanic Field,38.97,-122.77,California
+323110,Mono Lake Volcanic Field,38,-119.03,California
+323120,Mono-Inyo Craters,37.82,-119.02,California
+323150,Mammoth Mountain,37.631,-119.032,California
+323160,Ubehebe Craters,37.02,-117.45,California
+323180,Coso Volcanic Field,36.03,-117.82,California
+323200,Salton Buttes,33.2,-115.62,California
+323822,Long Valley Caldera,37.7,-118.87,California
+324010,Black Butte Crater lava field,43.18,-114.35,Idaho
+324020,Craters of the Moon volcanic field,43.42,-113.5,Idaho
+324030,Wapi Lava Field,42.88,-113.22,Idaho
+324040,Hells Half Acre lava field,43.5,-112.45,Idaho
+325010,Yellowstone,44.43,-110.67,Wyoming
+326010,Soda Lakes,39.51764,-118.880719,Nevada
+327040,Markagunt Plateau volcanic field,37.58,-112.67,Utah
+327050,Black Rock Desert volcanic field,38.97,-112.5,Utah
+327110,Carrizozo lava flow,33.78,-105.93,New Mexico
+327120,Zuni-Bandera volcanic field,34.8,-108,New Mexico
+327812,Red Hill-Quemado volcanic field,34.25,-108.83,New Mexico
+327817,Valles Caldera,35.87,-106.57,New Mexico
+328010,Dotsero Volcanic Center,39.65,-107.03,Colorado
+329010,Uinkaret volcanic field,36.38,-113.13,Arizona
+329020,San Francisco Volcanic Field,35.37,-111.5,Arizona
+332000,Kama'ehuakanaloa,18.92,-155.27,Hawaii
+332010,Kilauea,19.421,-155.287,Hawaii
+332020,Mauna Loa,19.475,-155.608,Hawaii
+332030,Mauna Kea,19.82,-155.47,Hawaii
+332040,Hualalai,19.692,-155.87,Hawaii
+332060,Haleakala,20.708,-156.25,Hawaii
+999999,Maclaren River volcanic field,63.13692,-146.32,Alaska - Cook Inlet-South Central

@@ -175,3 +175,41 @@ Quirks worth knowing about the source:
 - A **204** (No Content) means there are no SIGMETs to give, with an empty body (so don't read it as JSON).
 - **Limits:** the API asks for at most 100 requests a minute and a User-Agent naming the app. It doesn't allow
   calls from a browser, so we fetch it from the server.
+
+## us-volcanoes.csv
+
+Where each US volcano is. The volcano alert feed (below) names a volcano and its USGS number but doesn't say
+where it is, so `server/feeds/volcanoes.js` looks the position up here.
+
+- **Source:** the USGS Hazard Notification System (HANS), list of US volcanoes:
+  https://volcanoes.usgs.gov/hans-public/api/volcano/getUSVolcanoes
+- **Downloaded:** 2026-10-30 04:55 UTC
+- **Licence:** US government work, free to use. We credit it as "Volcano alerts from the USGS".
+- **Columns:** `vnum,name,lat,lon,region`, sorted by `vnum`
+  - `vnum`: the volcano's number in the Smithsonian's Global Volcanism Program list, e.g. `311120` for Great
+    Sitkin. The alert feed uses the same number.
+  - `lat`, `lon`: degrees, as USGS gives them (up to 5 decimal places)
+  - `region`: as USGS writes it, e.g. `Alaska - Aleutians`, `Northern Mariana Islands`
+- **Size:** 170 volcanoes: Alaska, the Cascades, California, Hawaii, Yellowstone and other western states,
+  American Samoa and the Northern Mariana Islands.
+
+To refresh it, download the source file and run:
+
+```
+node scripts/build-volcanoes.js path/to/getUSVolcanoes.json
+```
+
+Volcanoes don't move, so this only needs doing when USGS adds one.
+
+Quirks worth knowing about the source:
+
+- **"US" includes territories:** American Samoa and the Northern Mariana Islands (near Guam) are in the list.
+- **Some longitudes are east (positive):** the western Aleutians cross the date line (Semisopochnoi is at
+  179.6, Great Sitkin next to it at -176.1), and the Mariana volcanoes are around 145.
+- **One vnum is `0`:** Ungulungwak Hill-Ingrichuak Hill in southwest Alaska has no proper number. It's kept,
+  and it's still unique.
+- Each volcano also comes with a long description (`boilerplate`, in HTML), a photo link and an ICAO-style
+  position (`N5205 W17607`). We don't keep those.
+
+`test/fixtures/usgs-us-volcanoes-sample.json`: 6 real volcanoes from the same download (the 4 with alerts on
+2026-10-30, plus Akutan and Semisopochnoi), with the long `boilerplate` text emptied to keep the file small.
