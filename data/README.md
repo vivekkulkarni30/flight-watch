@@ -208,8 +208,70 @@ Quirks worth knowing about the source:
   179.6, Great Sitkin next to it at -176.1), and the Mariana volcanoes are around 145.
 - **One vnum is `0`:** Ungulungwak Hill-Ingrichuak Hill in southwest Alaska has no proper number. It's kept,
   and it's still unique.
+- **One vnum is `999999`:** the Maclaren River volcanic field (central Alaska). It looks like a placeholder,
+  not a real number. Don't use 999999 as a made-up number in tests.
 - Each volcano also comes with a long description (`boilerplate`, in HTML), a photo link and an ICAO-style
   position (`N5205 W17607`). We don't keep those.
 
 `test/fixtures/usgs-us-volcanoes-sample.json`: 6 real volcanoes from the same download (the 4 with alerts on
 2026-10-30, plus Akutan and Semisopochnoi), with the long `boilerplate` text emptied to keep the file small.
+
+## Volcano alert sample (test fixture)
+
+USGS gives every US volcano an **aviation colour code**, for pilots and airlines:
+
+| Code | Means | Our circle |
+|---|---|---|
+| GREEN | Normal, nothing unusual | not shown |
+| YELLOW | Restless: more activity than normal | 50 km |
+| ORANGE | Unrest is rising, or a small eruption with little or no ash | 100 km |
+| RED | An eruption is under way or expected soon, with a lot of ash | 200 km |
+
+Each volcano also has a ground **alert level** for people nearby: NORMAL, ADVISORY, WATCH or WARNING. They
+usually go together (GREEN with NORMAL, YELLOW with ADVISORY, and so on), but not always.
+
+The circle sizes are **our choice, not USGS's**: the higher the alert, the bigger the area to stay clear of.
+USGS doesn't say how far ash will reach; for an actual ash cloud, the SIGMETs (above) draw its real shape.
+
+`test/fixtures/volcanoes-sample.json`: the whole list of elevated US volcanoes, as USGS gave it. Fetched
+2026-10-30 15:18 AEDT (04:18 UTC); still the same at 04:55 UTC.
+
+- **Source:** https://volcanoes.usgs.gov/hans-public/api/volcano/getElevatedVolcanoes (the USGS
+  [Hazard Notification System](https://volcanoes.usgs.gov/hans-public/), HANS).
+- **Licence:** US government work, free to use. We credit it as "Volcano alerts from the USGS".
+- **US volcanoes only**, including American Samoa and the Northern Mariana Islands. Volcanoes elsewhere
+  (Etna, Sakurajima...) aren't in it; their ash reaches us as SIGMETs.
+- **In the sample:** Great Sitkin (ORANGE, WATCH) in the Aleutians; Shishaldin (YELLOW, ADVISORY) on the Alaska
+  Peninsula; Kilauea (YELLOW, ADVISORY) in Hawaii; Ahyi Seamount (YELLOW, ADVISORY), an underwater volcano in
+  the Northern Mariana Islands.
+
+Each volcano is an object. The fields we use:
+
+| Field | Example | Notes |
+|---|---|---|
+| `vnum` | `311120` | The volcano's number, a string. We look its position up in `us-volcanoes.csv` |
+| `volcano_name` | `Great Sitkin` | |
+| `color_code` | `ORANGE` | The aviation colour code |
+| `alert_level` | `WATCH` | The ground alert level |
+| `sent_unixtime` | `1793302774` | When the latest notice for it was sent, **Unix seconds**. `sent_utc` is the same time as text |
+| `notice_url` | | The notice itself, for people to read |
+
+Quirks worth knowing about the source:
+
+- **No positions.** The answer names each volcano but doesn't say where it is. Positions come from USGS's
+  `getUSVolcanoes` list instead, saved as `data/us-volcanoes.csv` (above). We tried the others:
+  `getMonitoredVolcanoes` has no positions either, and `getCapElevated` has them but only listed 2 of the 4
+  elevated volcanoes (it seems to hold only alerts that changed recently).
+- **The notice time isn't when the alert started.** `sent_unixtime` is the latest notice about the volcano,
+  often a daily update ("DU" in `notice_type_cd`), so it moves forward every day even when the level hasn't
+  changed. We use it as `validFrom` anyway; it's the only time given.
+- **No end time.** An alert lasts until USGS sends a notice that changes it, so `validTo` is `null`.
+- **Several volcanoes can share one notice.** Great Sitkin and Shishaldin both point to the same AVO daily
+  update (`notice_identifier`), so the notice can't be used as an id. We use `vnum`.
+- **No GREEN in the elevated list**, as you'd expect, but the code still skips GREEN in case. The tests add a
+  real GREEN row (Akutan) from `getMonitoredVolcanoes`, the list of all monitored volcanoes, fetched
+  2026-10-30 04:55 UTC.
+- `getMonitoredVolcanoes` also has two rows that aren't volcanoes, `Alaskan Volcanoes` and `Cascade Range`,
+  with no `vnum` (notices about a whole region). If one ever turns up in the elevated list, it isn't in
+  `us-volcanoes.csv`, so the feed leaves it out with a WARN.
+- **Slashes are escaped** in URLs (`https:\/\/volcanoes...`). That's valid JSON and reads back as a plain `/`.
