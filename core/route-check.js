@@ -70,14 +70,20 @@ export function kmFromSegment(p, a, b) {
 // The warnings a flight's path passes through, or comes within bufferKm of.
 //   path:     { callsign, icao24, points: [{ t, lat, lon, altM }] }
 //   warnings: [{ id, kind, hazard, ..., shape: { type: 'polygon', coords: [[lat, lon], ...] } }]
-// Only polygon shapes are checked; any other shape type is skipped.
+//             or, for kind 'volcano', shape: { type: 'circle', center: [lat, lon], radiusKm }
+// Any other shape type is skipped.
 // TODO: this doesn't look at validFrom/validTo yet, so a warning counts even if it has expired or not
 // started by the time the flight gets there.
 export function warningsOnRoute(path, warnings, { bufferKm = 50 } = {}) {
   const legs = legsOf(path.points);
-  return warnings.filter(
-    (w) => w.shape?.type === 'polygon' && legs.some(([a, b]) => legNearPolygon(a, b, w.shape.coords, bufferKm)),
-  );
+  return warnings.filter((w) => {
+    // Volcanoes are circles; everything else is a SIGMET polygon.
+    if (w.kind === 'volcano') {
+      const [lat, lon] = w.shape.center;
+      return legs.some(([a, b]) => kmFromSegment({ lat, lon }, a, b) <= w.shape.radiusKm + bufferKm);
+    }
+    return w.shape?.type === 'polygon' && legs.some(([a, b]) => legNearPolygon(a, b, w.shape.coords, bufferKm));
+  });
 }
 
 // Consecutive points make the legs. A path with one point is a leg that starts and ends there.

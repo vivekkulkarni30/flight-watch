@@ -204,3 +204,52 @@ test(
     assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
   },
 );
+
+// Volcano alerts -----------------------------------------------------------------------------------
+
+// A volcano alert as the volcano feed gives it: a circle around the summit. Centre is [lat, lon].
+const volcano = (id, name, level, center, radiusKm) => ({
+  id,
+  kind: 'volcano',
+  hazard: 'VA',
+  level,
+  name,
+  validFrom: '2026-09-28T00:00:00.000Z',
+  validTo: '2026-09-29T00:00:00.000Z',
+  shape: { type: 'circle', center, radiusKm },
+});
+
+const etna = volcano('volcano-etna', 'Etna', 'ORANGE', [37.75, 14.99], 20);
+const sakurajima = volcano('volcano-sakurajima', 'Sakurajima', 'ORANGE', [31.58, 130.66], 30);
+const kilauea = volcano('volcano-kilauea', 'Kilauea', 'YELLOW', [19.41, -155.29], 10);
+const fukuoka = { lat: 33.58, lon: 130.45 };
+const kagoshima = { lat: 31.8, lon: 130.72 }; // the airport, about 25 km from Sakurajima's summit
+const naples = { lat: 40.88, lon: 14.29 };
+const bari = { lat: 41.14, lon: 16.76 };
+
+test('warningsOnRoute: Fukuoka to Kagoshima lands inside Sakurajima\'s ORANGE alert', () => {
+  assert.deepEqual(warningsOnRoute(path(fukuoka, kagoshima), [sakurajima]), [sakurajima]);
+});
+
+test('warningsOnRoute: Naples to Bari, about 350 km from Etna, is clear', () => {
+  assert.deepEqual(warningsOnRoute(path(naples, bari), [etna]), []);
+});
+
+test('warningsOnRoute: a volcano counts within its radius plus the buffer, not past it', () => {
+  // Etna's alert reaches 20 km from the summit, plus the default 50 km buffer: 70 km in all.
+  // Flying due east 0.6 degrees of latitude north of the summit is about 67 km away; 0.65 degrees is about 72 km.
+  const justInside = path({ lat: 38.35, lon: 13 }, { lat: 38.35, lon: 17 });
+  const justOutside = path({ lat: 38.4, lon: 13 }, { lat: 38.4, lon: 17 });
+  assert.deepEqual(warningsOnRoute(justInside, [etna]), [etna]);
+  assert.deepEqual(warningsOnRoute(justOutside, [etna]), []);
+  // With no buffer, only the 20 km alert itself counts.
+  assert.deepEqual(warningsOnRoute(justInside, [etna], { bufferKm: 0 }), []);
+});
+
+test('warningsOnRoute: SIGMETs and volcanoes together, in the order given', () => {
+  // A storm over Kyushu, across the Fukuoka to Kagoshima path.
+  const kyushuStorm = sigmet('RJJJ-3-1790000000', [[33, 130], [33, 131], [32.5, 131], [32.5, 130]]);
+  const warnings = [etna, kyushuStorm, storm, kilauea, sakurajima];
+  assert.deepEqual(warningsOnRoute(path(fukuoka, kagoshima), warnings), [kyushuStorm, sakurajima]);
+  assert.deepEqual(warningsOnRoute(path(sydney, auckland), warnings), [storm]);
+});
