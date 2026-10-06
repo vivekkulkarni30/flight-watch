@@ -1,4 +1,6 @@
 // The world map. Leaflet is loaded from the CDN in index.html.
+import { levelColour } from './levels.js';
+
 const map = L.map('map').setView([20, 0], 2);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -121,8 +123,20 @@ function hazardStyle(hazard) {
 // The warning shapes currently on the map, so the next refresh can replace them.
 let warningLayer = null;
 
-// Each warning's shape on the map by its id, so the "On your route" list can find it.
-let polygonsById = new Map();
+// Each warning's shape on the map (a polygon, or a circle for a volcano) by its id, so the
+// "On your route" list can find it.
+let shapesById = new Map();
+
+// The volcano levels shown in the legend and the words for them. GREEN means the volcano is quiet,
+// so it isn't an alert.
+const ALERT_LEVELS = ['YELLOW', 'ORANGE', 'RED'];
+
+function levelWord(level) {
+  return level.charAt(0) + level.slice(1).toLowerCase();
+}
+
+// A small triangle at the centre of a volcano alert, so you can see where the volcano itself is.
+const volcanoIcon = L.divIcon({ className: 'volcano-icon', html: '▲', iconSize: [14, 14] });
 
 // "Valid until" in the viewer's own time, e.g. "Wed 24 Sep, 3:00 pm".
 function formatTime(iso) {
@@ -135,10 +149,32 @@ function formatTime(iso) {
   });
 }
 
+// A volcano alert: a circle in the level's colour, with a volcano marker in the middle.
+// Leaflet wants the radius in metres, and the feed gives it in km.
+function drawVolcano(warning) {
+  const colour = levelColour(warning.level);
+  const tooltip = `${warning.name}<br>Volcano alert: ${levelWord(warning.level)}`;
+  const circle = L.circle(warning.shape.center, {
+    radius: warning.shape.radiusKm * 1000,
+    color: colour,
+    weight: 1,
+    fillColor: colour,
+    fillOpacity: 0.3,
+  }).bindTooltip(tooltip);
+  const marker = L.marker(warning.shape.center, { icon: volcanoIcon }).bindTooltip(tooltip);
+  return { circle, marker };
+}
+
 function drawWarnings(warnings) {
   const shapes = [];
   const byId = new Map();
   for (const warning of warnings) {
+    if (warning.kind === 'volcano' && warning.shape?.type === 'circle') {
+      const { circle, marker } = drawVolcano(warning);
+      shapes.push(circle, marker);
+      byId.set(warning.id, circle);
+      continue;
+    }
     if (warning.shape?.type !== 'polygon') continue;
     const style = hazardStyle(warning.hazard);
     const polygon = L.polygon(warning.shape.coords, {
@@ -154,7 +190,7 @@ function drawWarnings(warnings) {
   // Swap the old layer for the new one in one go.
   if (warningLayer) warningLayer.remove();
   warningLayer = L.layerGroup(shapes).addTo(map);
-  polygonsById = byId;
+  shapesById = byId;
 
   // The refresh drew fresh shapes, so mark the ones on the route again.
   highlightRoute();
@@ -179,9 +215,14 @@ setInterval(showWarnings, 60 * 1000);
 const legend = L.control({ position: 'bottomleft' });
 legend.onAdd = function () {
   const div = L.DomUtil.create('div', 'legend');
-  const rows = [...Object.values(HAZARDS), OTHER_HAZARD].map(
+  const hazardRows = [...Object.values(HAZARDS), OTHER_HAZARD].map(
     (h) => `<div><span class="swatch" style="background:${h.color}"></span>${h.label}</div>`,
   );
+  const volcanoRows = ALERT_LEVELS.map(
+    (level) =>
+      `<div><span class="swatch round" style="background:${levelColour(level)}"></span>Volcano alert (${level.toLowerCase()})</div>`,
+  );
+  const rows = [...hazardRows, ...volcanoRows];
   div.innerHTML = `<strong>Warnings</strong>${rows.join('')}`;
   return div;
 };
@@ -241,10 +282,10 @@ function hideRoutePanel() {
 
 // Thicker outline and stronger fill for the warnings on the route; the rest go back to normal.
 function highlightRoute() {
-  for (const [id, polygon] of polygonsById) {
+  for (const [id, shape] of shapesById) {
     const onRoute = routeIds.has(id);
-    polygon.setStyle({ weight: onRoute ? 3 : 1, fillOpacity: onRoute ? 0.5 : 0.3 });
-    if (onRoute) polygon.bringToFront();
+    shape.setStyle({ weight: onRoute ? 3 : 1, fillOpacity: onRoute ? 0.5 : 0.3 });
+    if (onRoute) shape.bringToFront();
   }
 }
 
