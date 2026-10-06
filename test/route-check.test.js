@@ -142,7 +142,7 @@ test('warningsOnRoute: Naples to Bari, about 350 km from Etna, is clear', () => 
 });
 
 test('warningsOnRoute: a volcano counts within its radius plus the buffer, not past it', () => {
-  // Etna's alert is 20 km across the summit, plus the default 50 km buffer: 70 km in all.
+  // Etna's alert reaches 20 km from the summit, plus the default 50 km buffer: 70 km in all.
   // Flying due east 0.6 degrees of latitude north of the summit is about 67 km away; 0.65 degrees is about 72 km.
   const justInside = path({ lat: 38.35, lon: 13 }, { lat: 38.35, lon: 17 });
   const justOutside = path({ lat: 38.4, lon: 13 }, { lat: 38.4, lon: 17 });

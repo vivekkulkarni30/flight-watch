@@ -33,7 +33,8 @@ export function buildServer(options = {}) {
   );
 
   // A flight's path: { callsign, icao24, points: [{ t, lat, lon, altM }], onRoute: [warnings] }.
-  // onRoute is the SIGMET warnings the path passes through or within 50 km of ([] before the first fetch).
+  // onRoute is the SIGMET warnings and volcano alerts the path passes through or within 50 km of
+  // ([] before the first fetch).
   // People type a flight number (QF144), but planes broadcast a callsign (QFA144), so convert first.
   // 404 unknown-airline: we don't know that airline code. 404 not-found: no plane is using that callsign now.
   app.get('/api/flight/:number', async (request, reply) => {
@@ -54,7 +55,9 @@ export function buildServer(options = {}) {
     }
     if (!path) return reply.code(404).send({ error: 'not-found' });
     // A new object, so the cached path isn't changed.
-    return { ...path, onRoute: warningsOnRoute(path, poller?.latest('sigmets') ?? []) };
+    const sigmets = poller?.latest('sigmets') ?? [];
+    const volcanoes = poller?.latest('volcanoes') ?? [];
+    return { ...path, onRoute: warningsOnRoute(path, [...sigmets, ...volcanoes]) };
   });
 
   // The latest SIGMET warnings (storms, turbulence, icing, volcanic ash), [] until the first fetch is in.

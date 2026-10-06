@@ -183,3 +183,26 @@ test('GET /api/flight/:number gives onRoute [] before the poller has fetched any
   assert.deepEqual(res.json().onRoute, []);
   await app.close();
 });
+
+test('GET /api/flight/:number includes volcano alerts near the path in onRoute, after the SIGMETs', async () => {
+  // A made-up alert for the test: 30 km around a point about 18 km off qfa1's path.
+  const nearPath = {
+    id: 'volcano-test',
+    kind: 'volcano',
+    hazard: 'VA',
+    level: 'ORANGE',
+    name: 'Test volcano',
+    validFrom: '2026-09-28T00:00:00.000Z',
+    validTo: '2026-09-29T00:00:00.000Z',
+    shape: { type: 'circle', center: [-33.0, 150.6], radiusKm: 30 },
+  };
+  const onPath = sigmet('YMMM-1', [[-32.5, 149.0], [-32.5, 151.0], [-33.5, 151.0], [-33.5, 149.0]]);
+  const app = buildServer({
+    lookupFlight: async () => qfa1,
+    poller: fakePoller({ sigmets: [onPath], volcanoes: [nearPath] }),
+  });
+  const res = await app.inject({ method: 'GET', url: '/api/flight/QFA1' });
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.json().onRoute, [onPath, nearPath]);
+  await app.close();
+});
