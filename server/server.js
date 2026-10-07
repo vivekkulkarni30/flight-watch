@@ -60,8 +60,13 @@ export function buildServer(options = {}) {
     return { ...path, onRoute: warningsOnRoute(path, [...sigmets, ...volcanoes]) };
   });
 
-  // The latest SIGMET warnings (storms, turbulence, icing, volcanic ash), [] until the first fetch is in.
-  app.get('/api/warnings', async () => poller?.latest('sigmets') ?? []);
+  // All current warnings in one list: the SIGMETs (storms, turbulence, icing, volcanic ash) followed by the
+  // volcano alerts. Each list counts as [] until its first fetch is in, so one feed being slow or down never
+  // hides the other.
+  app.get('/api/warnings', async () => [
+    ...(poller?.latest('sigmets') ?? []),
+    ...(poller?.latest('volcanoes') ?? []),
+  ]);
 
   return app;
 }
@@ -81,6 +86,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         name: 'sigmets',
         everySeconds: 60,
         fetch: async () => (await import('./feeds/sigmets.js')).fetchSigmets(),
+      },
+      // Volcano alerts from USGS. Alert levels change over hours or days, not minutes, and USGS asks for
+      // reasonable use, so every 10 minutes is plenty: 144 requests a day.
+      {
+        name: 'volcanoes',
+        everySeconds: 600,
+        fetch: async () => (await import('./feeds/volcanoes.js')).fetchVolcanoes(),
       },
     ],
   });
