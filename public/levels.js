@@ -13,5 +13,5 @@ export const UNKNOWN_LEVEL_COLOUR = '#868e96';
 export function levelColour(level) {
   const position = LEVELS.indexOf(level);
   if (position === -1) return UNKNOWN_LEVEL_COLOUR;
-  return LEVEL_COLOURS[position - 1];
+  return LEVEL_COLOURS[position];
 }
