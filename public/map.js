@@ -238,11 +238,25 @@ const routeList = document.getElementById('route-list');
 let routeIds = new Set();
 
 function routeItemHtml(warning) {
+  // Volcano alerts have a level instead of a hazard colour, and no end time.
+  if (warning.kind === 'volcano') {
+    return `<li data-id="${warning.id}">
+    <span class="dot" style="background:${levelColour(warning.level)}"></span>Volcano alert (${warning.level.toLowerCase()}): ${warning.name}
+  </li>`;
+  }
   const style = hazardStyle(warning.hazard);
   return `<li data-id="${warning.id}">
     <span class="dot" style="background:${style.color}"></span>${style.label}: ${warning.name}
     <div class="until">until ${formatTime(warning.validTo)}</div>
   </li>`;
+}
+
+// The area a warning covers, for zooming to it. A circle's bounds come from its centre and size
+// (toBounds takes the full width in metres, so twice the radius).
+function warningBounds(shape) {
+  if (shape?.type === 'polygon') return L.polygon(shape.coords).getBounds();
+  if (shape?.type === 'circle') return L.latLng(shape.center).toBounds(shape.radiusKm * 1000 * 2);
+  return null;
 }
 
 function showRoutePanel(onRoute) {
@@ -257,14 +271,13 @@ function showRoutePanel(onRoute) {
     routeList.innerHTML = onRoute.map(routeItemHtml).join('');
   }
 
-  // Clicking an item zooms the map to that warning's shape.
+  // Clicking an item zooms the map to that warning's shape (a polygon or a volcano's circle).
   routeList.onclick = (event) => {
     const item = event.target.closest('li');
     if (!item) return;
     const warning = onRoute.find((w) => w.id === item.dataset.id);
-    if (warning?.shape?.type === 'polygon') {
-      map.fitBounds(L.polygon(warning.shape.coords).getBounds(), { padding: [40, 40] });
-    }
+    const bounds = warningBounds(warning?.shape);
+    if (bounds) map.fitBounds(bounds, { padding: [40, 40] });
   };
 
   routePanel.hidden = false;
