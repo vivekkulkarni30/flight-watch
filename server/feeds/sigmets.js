@@ -19,16 +19,20 @@ const HAZARD_NAMES = {
   MTW: 'Mountain waves',
 };
 
-// Fetch all current SIGMETs and return them as Warnings:
+// Fetch all current SIGMETs. Returns a feed result:
+//   { status: 'ok', fetchedAt, items }            the feed answered 200 with a list (fetchedAt: ISO time)
+//   { status: 'no-data', fetchedAt: null, items: [] }   the feed answered 204: it told us nothing
+// A 204 is not "no warnings": there are always SIGMETs somewhere in the world (issue #23), so we log it as a WARN.
+// items are Warnings:
 //   { id, kind: 'sigmet', hazard, level: null, name, validFrom, validTo, shape: { type: 'polygon', coords } }
-// coords are [lat, lon] pairs, each corner once. Returns [] if the feed answers 204 (no data).
+// coords are [lat, lon] pairs, each corner once.
 // Throws an Error with .status for any other answer but 200.
 // Pass your own fetch to test without the network.
 export async function fetchSigmets({ fetch = globalThis.fetch } = {}) {
   const res = await fetch(FEED_URL, { headers: HEADERS });
   if (res.status === 204) {
-    log.info('sigmet feed returned 204 (no data)');
-    return [];
+    log.warn('sigmet feed returned 204 (no data), we have no SIGMETs right now');
+    return { status: 'no-data', fetchedAt: null, items: [] };
   }
   if (res.status !== 200) {
     log.warn(`sigmet feed returned ${res.status}`);
@@ -36,7 +40,8 @@ export async function fetchSigmets({ fetch = globalThis.fetch } = {}) {
     err.status = res.status;
     throw err;
   }
-  return latestCopies(await res.json()).flatMap(toWarnings);
+  const fetchedAt = new Date().toISOString();
+  return { status: 'ok', fetchedAt, items: latestCopies(await res.json()).flatMap(toWarnings) };
 }
 
 // The same SIGMET (same FIR, number and start time) can arrive twice, e.g. resent to fix a typo in its

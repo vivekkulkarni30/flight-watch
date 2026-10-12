@@ -59,7 +59,7 @@ test('fetchVolcanoes asks USGS for the elevated volcanoes and says who is asking
 test('fetchVolcanoes turns Great Sitkin (ORANGE) into a 100 km circle around the volcano', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const sitkin = (await fetchVolcanoes({ fetch })).find((w) => w.id === 'volcano-311120');
+  const sitkin = (await fetchVolcanoes({ fetch })).items.find((w) => w.id === 'volcano-311120');
 
   assert.deepEqual(sitkin, {
     id: 'volcano-311120',
@@ -77,7 +77,7 @@ test('fetchVolcanoes turns Great Sitkin (ORANGE) into a 100 km circle around the
 test('fetchVolcanoes gives every volcano in the sample its level and radius', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const summary = (await fetchVolcanoes({ fetch })).map((w) => [w.name, w.level, w.shape.radiusKm]);
+  const summary = (await fetchVolcanoes({ fetch })).items.map((w) => [w.name, w.level, w.shape.radiusKm]);
   assert.deepEqual(summary, [
     ['Great Sitkin (WATCH, aviation code ORANGE)', 'ORANGE', 100],
     ['Shishaldin (ADVISORY, aviation code YELLOW)', 'YELLOW', 50],
@@ -89,7 +89,7 @@ test('fetchVolcanoes gives every volcano in the sample its level and radius', as
 test('fetchVolcanoes keeps east longitudes (Ahyi Seamount, near Guam)', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const ahyi = (await fetchVolcanoes({ fetch })).find((w) => w.id === 'volcano-284141');
+  const ahyi = (await fetchVolcanoes({ fetch })).items.find((w) => w.id === 'volcano-284141');
   assert.deepEqual(ahyi.shape.center, [20.437, 145.03]);
 });
 
@@ -98,7 +98,7 @@ test('fetchVolcanoes makes a RED alert a 200 km circle', async (t) => {
   const rows = JSON.parse(sample);
   rows[0] = { ...rows[0], color_code: 'RED', alert_level: 'WARNING' };
   const { fetch } = fakeFetch(200, JSON.stringify(rows));
-  const sitkin = (await fetchVolcanoes({ fetch })).find((w) => w.id === 'volcano-311120');
+  const sitkin = (await fetchVolcanoes({ fetch })).items.find((w) => w.id === 'volcano-311120');
   assert.equal(sitkin.level, 'RED');
   assert.equal(sitkin.shape.radiusKm, 200);
   assert.equal(sitkin.name, 'Great Sitkin (WARNING, aviation code RED)');
@@ -108,7 +108,7 @@ test('fetchVolcanoes leaves out GREEN volcanoes and ones with no colour code', a
   captureLog(t);
   const rows = [...JSON.parse(sample), akutanGreen, { ...akutanGreen, color_code: 'UNASSIGNED' }, { ...akutanGreen, color_code: null }];
   const { fetch } = fakeFetch(200, JSON.stringify(rows));
-  const warnings = await fetchVolcanoes({ fetch });
+  const { items: warnings } = await fetchVolcanoes({ fetch });
   assert.equal(warnings.length, 4);
   assert.equal(warnings.find((w) => w.id === 'volcano-311320'), undefined);
 });
@@ -117,7 +117,7 @@ test('fetchVolcanoes leaves out a volcano we have no position for, and logs a WA
   const readLog = captureLog(t);
   const rows = [{ ...JSON.parse(sample)[0], vnum: '123456', volcano_name: 'Nowhere' }];
   const { fetch } = fakeFetch(200, JSON.stringify(rows));
-  assert.deepEqual(await fetchVolcanoes({ fetch }), []);
+  assert.deepEqual((await fetchVolcanoes({ fetch })).items, []);
   assert.match(readLog(), /WARN  volcano Nowhere \(vnum 123456\) is not in data\/us-volcanoes.csv: left out/);
 });
 
@@ -126,23 +126,37 @@ test('fetchVolcanoes uses the name for the id when there is no vnum, and null wh
   // Kilauea's position is found by name when the vnum is missing.
   const rows = [{ ...JSON.parse(sample)[2], vnum: null, sent_unixtime: null }];
   const { fetch } = fakeFetch(200, JSON.stringify(rows));
-  const [kilauea] = await fetchVolcanoes({ fetch });
+  const { items: [kilauea] } = await fetchVolcanoes({ fetch });
   assert.equal(kilauea.id, 'volcano-Kilauea');
   assert.equal(kilauea.validFrom, null);
   assert.deepEqual(kilauea.shape.center, [19.421, -155.287]);
 });
 
-test('fetchVolcanoes returns [] for a 204 (no data) and logs it as INFO', async (t) => {
-  const readLog = captureLog(t);
-  const { fetch } = fakeFetch(204);
-  assert.deepEqual(await fetchVolcanoes({ fetch }), []);
-  assert.match(readLog(), /INFO  volcano feed returned 204/);
+test('fetchVolcanoes says ok, with the time it arrived, when USGS answers with a list', async (t) => {
+  captureLog(t);
+  const before = Date.now();
+  const result = await fetchVolcanoes({ fetch: fakeFetch().fetch });
+  assert.equal(result.status, 'ok');
+  assert.equal(result.items.length, 4);
+  assert.ok(Date.parse(result.fetchedAt) >= before - 1000, `fetchedAt ${result.fetchedAt}`);
+  assert.equal(result.fetchedAt, new Date(result.fetchedAt).toISOString()); // an ISO time
 });
 
-test('fetchVolcanoes returns [] for an empty body or an empty list', async (t) => {
-  captureLog(t);
-  assert.deepEqual(await fetchVolcanoes({ fetch: fakeFetch(200, '').fetch }), []);
-  assert.deepEqual(await fetchVolcanoes({ fetch: fakeFetch(200, '[]').fetch }), []);
+test('fetchVolcanoes says no-data for a 204, not "no alerts", and logs it as a WARN (issue #23)', async (t) => {
+  const readLog = captureLog(t);
+  const { fetch } = fakeFetch(204);
+  assert.deepEqual(await fetchVolcanoes({ fetch }), { status: 'no-data', fetchedAt: null, items: [] });
+  assert.match(readLog(), /WARN  volcano feed returned 204/);
+});
+
+test('fetchVolcanoes says no-data for an empty body (WARN), but ok for an empty list', async (t) => {
+  const readLog = captureLog(t);
+  assert.deepEqual(await fetchVolcanoes({ fetch: fakeFetch(200, '').fetch }), { status: 'no-data', fetchedAt: null, items: [] });
+  assert.match(readLog(), /WARN  volcano feed returned 200 with an empty body/);
+  // An empty list is a real answer: no US volcano is above normal right now.
+  const empty = await fetchVolcanoes({ fetch: fakeFetch(200, '[]').fetch });
+  assert.equal(empty.status, 'ok');
+  assert.deepEqual(empty.items, []);
 });
 
 test('fetchVolcanoes throws with status 500 and logs a WARN when the feed fails', async (t) => {
