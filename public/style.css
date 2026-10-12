@@ -105,6 +105,23 @@ main {
   background: none;
 }
 
+/* A feed has no data, so we can't say the route is clear (issue #23). */
+#route-list li.unavailable {
+  background: #fff4e6;
+  border-left: 4px solid #e8590c;
+  color: #7a2e00;
+  cursor: default;
+}
+
+#route-list li.unavailable:hover {
+  background: #fff4e6;
+}
+
+#route-list li.unavailable div {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
 #route-list .dot {
   display: inline-block;
   width: 10px;

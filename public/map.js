@@ -1,5 +1,6 @@
 // The world map. Leaflet is loaded from the CDN in index.html.
 import { levelColour } from './levels.js';
+import { routeMessage, ALL_CLEAR } from './route-message.js';
 
 const map = L.map('map').setView([20, 0], 2);
 
@@ -95,7 +96,7 @@ searchForm.addEventListener('submit', async (event) => {
     }
 
     showFlight(data);
-    showRoutePanel(data.onRoute);
+    showRoutePanel(data.onRoute, data.feeds);
   } catch (err) {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
@@ -259,17 +260,24 @@ function warningBounds(shape) {
   return null;
 }
 
-function showRoutePanel(onRoute) {
-  // A server without the route check sends no onRoute at all; treat that the same as an empty list.
-  onRoute = onRoute ?? [];
+// The box at the top of the panel when a feed has no data. The words come from route-message.js,
+// not from the server, so they're safe to put in the page as HTML.
+function unavailableHtml(unavailable) {
+  const lines = unavailable.lines.map((line) => `<div>${line}</div>`).join('');
+  return `<li class="unavailable" role="alert"><strong>${unavailable.title}</strong>${lines}</li>`;
+}
+
+function showRoutePanel(onRoute, feeds) {
+  // route-message.js decides what to say: an empty list is only "all clear" if every feed has data.
+  const message = routeMessage(onRoute, feeds);
+  onRoute = message.items;
   routeIds = new Set(onRoute.map((w) => w.id));
 
-  // An empty list joins to '', which leaves a blank panel, so say so in words instead.
-  if (onRoute.length === 0) {
-    routeList.innerHTML = '<li class="empty">Nothing on your route right now</li>';
-  } else {
-    routeList.innerHTML = onRoute.map(routeItemHtml).join('');
-  }
+  let html = '';
+  if (message.unavailable) html += unavailableHtml(message.unavailable);
+  if (message.allClear) html += `<li class="empty">${ALL_CLEAR}</li>`;
+  html += onRoute.map(routeItemHtml).join('');
+  routeList.innerHTML = html;
 
   // Clicking an item zooms the map to that warning's shape (a polygon or a volcano's circle).
   routeList.onclick = (event) => {
