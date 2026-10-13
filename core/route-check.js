@@ -8,6 +8,40 @@
 // per cent of the true distance, which is plenty for "is this flight near a storm?".
 
 const KM_PER_DEGREE = 111.2;
+const EARTH_RADIUS_KM = 6371;
+const LONG_LEG_KM = 500;
+
+// Long legs (over 500 km) get points added along the great circle, the way the plane flies, so no piece is over maxKm.
+export function densify(points, maxKm = 250) {
+  const out = points.slice(0, 1);
+  for (let i = 1; i < points.length; i++) {
+    const a = toVector(points[i - 1]);
+    const b = toVector(points[i]);
+    const angle = Math.acos(Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2])));
+    const km = angle * EARTH_RADIUS_KM;
+    if (km > LONG_LEG_KM) {
+      const pieces = Math.ceil(km / maxKm);
+      for (let k = 1; k < pieces; k++) out.push(between(a, b, angle, k / pieces));
+    }
+    out.push(points[i]);
+  }
+  return out;
+}
+
+// A point as a 3D unit vector from the centre of the Earth.
+function toVector({ lat, lon }) {
+  const la = (lat * Math.PI) / 180;
+  const lo = (lon * Math.PI) / 180;
+  return [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)];
+}
+
+// The point fraction f of the way from a to b along the great circle (spherical linear interpolation).
+function between(a, b, angle, f) {
+  const wa = Math.sin((1 - f) * angle) / Math.sin(angle);
+  const wb = Math.sin(f * angle) / Math.sin(angle);
+  const [x, y, z] = [0, 1, 2].map((i) => wa * a[i] + wb * b[i]);
+  return { lat: (Math.asin(z) * 180) / Math.PI, lon: (Math.atan2(y, x) * 180) / Math.PI };
+}
 
 // Is the point inside the polygon? Cast a line due east from the point and count how many edges it
 // crosses: an odd count means inside.

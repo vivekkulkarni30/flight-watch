@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { pointInPolygon, segmentsCross, kmFromSegment, warningsOnRoute } from '../core/route-check.js';
+import { pointInPolygon, segmentsCross, kmFromSegment, warningsOnRoute, densify } from '../core/route-check.js';
 
 // A thunderstorm area over the Tasman Sea, east of Sydney. Corners are [lat, lon].
 const tasmanStorm = [[-32.5, 153.4], [-32.5, 156.4], [-35.5, 156.4], [-35.5, 153.4]];
@@ -204,6 +204,49 @@ test(
     assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
   },
 );
+
+// densify -------------------------------------------------------------------------------------------
+
+// Distance in km along the Earth's surface (haversine), to check densify independently.
+function kmApart(a, b) {
+  const rad = (d) => (d * Math.PI) / 180;
+  const h =
+    Math.sin(rad(b.lat - a.lat) / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(rad(b.lon - a.lon) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+test('densify: legs under 500 km are left as they are', () => {
+  // About 145 km, then 185 km, off the coast of New South Wales.
+  const points = [{ lat: -33, lon: 151 }, { lat: -34, lon: 152 }, { lat: -34, lon: 154 }];
+  assert.deepEqual(densify(points), points);
+});
+
+test('densify: no points or one point come back unchanged', () => {
+  assert.deepEqual(densify([]), []);
+  assert.deepEqual(densify([perth]), [perth]);
+});
+
+test('densify: Perth to Johannesburg gets points along the great circle, none more than 250 km apart', () => {
+  const points = densify([perth, johannesburg]);
+  assert.equal(points[0], perth);
+  assert.equal(points.at(-1), johannesburg);
+  assert.ok(points.length > 30, `got ${points.length} points`);
+  for (let i = 1; i < points.length; i++) {
+    const km = kmApart(points[i - 1], points[i]);
+    assert.ok(km <= 250, `piece ${i} is ${km} km`);
+  }
+  // On the great circle, the pieces add up to the straight-through distance, about 8,300 km.
+  const total = points.slice(1).reduce((sum, p, i) => sum + kmApart(points[i], p), 0);
+  assert.ok(Math.abs(total - kmApart(perth, johannesburg)) < 1, `pieces add up to ${total} km`);
+  // And one of the new points is the halfway point Daniel worked out in #22: 37.6 S, 70.6 E.
+  const nearest = Math.min(...points.map((p) => kmApart(p, { lat: -37.6, lon: 70.6 })));
+  assert.ok(nearest < 20, `nearest point is ${nearest} km from 37.6 S, 70.6 E`);
+});
+
+test('densify: a smaller maxKm gives more points', () => {
+  assert.ok(densify([perth, johannesburg], 100).length > densify([perth, johannesburg]).length);
+});
 
 // Volcano alerts -----------------------------------------------------------------------------------
 
