@@ -199,6 +199,27 @@ footer a {
   border-radius: 50%;
 }
 
+/* On the map when a warning feed has no data (issue #23). */
+.feed-banner {
+  max-width: 260px;
+  padding: 6px 10px;
+  background: #fff4e6;
+  border-left: 4px solid #e8590c;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  color: #7a2e00;
+  font-size: 13px;
+}
+
+.feed-banner[hidden] {
+  display: none;
+}
+
+.feed-banner div {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
 /* The small triangle at the centre of a volcano alert. */
 .volcano-icon {
   color: #3d2b1f;

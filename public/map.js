@@ -1,6 +1,6 @@
 // The world map. Leaflet is loaded from the CDN in index.html.
 import { levelColour } from './levels.js';
-import { routeMessage, ALL_CLEAR } from './route-message.js';
+import { routeMessage, feedProblems, ALL_CLEAR, UNAVAILABLE_TITLE } from './route-message.js';
 
 const map = L.map('map').setView([20, 0], 2);
 
@@ -197,13 +197,39 @@ function drawWarnings(warnings) {
   highlightRoute();
 }
 
-// If the request fails, keep whatever shapes are already on the map.
+// A banner at the top of the map when a warning feed has no data, so you can see it without searching
+// for a flight (issue #23). Hidden while every feed is ok.
+const feedBanner = L.control({ position: 'topright' });
+feedBanner.onAdd = function () {
+  const div = L.DomUtil.create('div', 'feed-banner');
+  div.setAttribute('role', 'status');
+  div.hidden = true;
+  return div;
+};
+feedBanner.addTo(map);
+
+function showFeedBanner(feeds) {
+  const div = feedBanner.getContainer();
+  const lines = feedProblems(feeds);
+  if (lines.length === 0) {
+    div.hidden = true;
+    div.innerHTML = '';
+    return;
+  }
+  // The words come from route-message.js, not from the server, so they're safe to put in as HTML.
+  div.innerHTML = `<strong>${UNAVAILABLE_TITLE}</strong>${lines.map((line) => `<div>${line}</div>`).join('')}`;
+  div.hidden = false;
+}
+
+// /api/warnings answers { warnings, feeds }: the shapes to draw, and whether each feed has data.
+// If the request fails, keep whatever shapes and banner are already on the map.
 async function showWarnings() {
   try {
     const res = await fetch('/api/warnings');
     if (!res.ok) return;
-    const warnings = await res.json();
-    drawWarnings(warnings);
+    const data = await res.json();
+    drawWarnings(data.warnings ?? []);
+    showFeedBanner(data.feeds);
   } catch (err) {
     // Keep the last shapes.
   }
