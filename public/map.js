@@ -1,5 +1,6 @@
 // The world map. Leaflet is loaded from the CDN in index.html.
 import { levelColour } from './levels.js';
+import { routeMessage, feedProblems, ALL_CLEAR, UNAVAILABLE_TITLE } from './route-message.js';
 
 const map = L.map('map').setView([20, 0], 2);
 
@@ -95,7 +96,7 @@ searchForm.addEventListener('submit', async (event) => {
     }
 
     showFlight(data);
-    showRoutePanel(data.onRoute);
+    showRoutePanel(data.onRoute, data.feeds);
   } catch (err) {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
@@ -196,13 +197,39 @@ function drawWarnings(warnings) {
   highlightRoute();
 }
 
-// If the request fails, keep whatever shapes are already on the map.
+// A banner at the top of the map when a warning feed has no data, so you can see it without searching
+// for a flight (issue #23). Hidden while every feed is ok.
+const feedBanner = L.control({ position: 'topright' });
+feedBanner.onAdd = function () {
+  const div = L.DomUtil.create('div', 'feed-banner');
+  div.setAttribute('role', 'status');
+  div.hidden = true;
+  return div;
+};
+feedBanner.addTo(map);
+
+function showFeedBanner(feeds) {
+  const div = feedBanner.getContainer();
+  const lines = feedProblems(feeds);
+  if (lines.length === 0) {
+    div.hidden = true;
+    div.innerHTML = '';
+    return;
+  }
+  // The words come from route-message.js, not from the server, so they're safe to put in as HTML.
+  div.innerHTML = `<strong>${UNAVAILABLE_TITLE}</strong>${lines.map((line) => `<div>${line}</div>`).join('')}`;
+  div.hidden = false;
+}
+
+// /api/warnings answers { warnings, feeds }: the shapes to draw, and whether each feed has data.
+// If the request fails, keep whatever shapes and banner are already on the map.
 async function showWarnings() {
   try {
     const res = await fetch('/api/warnings');
     if (!res.ok) return;
-    const warnings = await res.json();
-    drawWarnings(warnings);
+    const data = await res.json();
+    drawWarnings(data.warnings ?? []);
+    showFeedBanner(data.feeds);
   } catch (err) {
     // Keep the last shapes.
   }
@@ -259,17 +286,24 @@ function warningBounds(shape) {
   return null;
 }
 
-function showRoutePanel(onRoute) {
-  // A server without the route check sends no onRoute at all; treat that the same as an empty list.
-  onRoute = onRoute ?? [];
+// The box at the top of the panel when a feed has no data. The words come from route-message.js,
+// not from the server, so they're safe to put in the page as HTML.
+function unavailableHtml(unavailable) {
+  const lines = unavailable.lines.map((line) => `<div>${line}</div>`).join('');
+  return `<li class="unavailable" role="alert"><strong>${unavailable.title}</strong>${lines}</li>`;
+}
+
+function showRoutePanel(onRoute, feeds) {
+  // route-message.js decides what to say: an empty list is only "all clear" if every feed has data.
+  const message = routeMessage(onRoute, feeds);
+  onRoute = message.items;
   routeIds = new Set(onRoute.map((w) => w.id));
 
-  // An empty list joins to '', which leaves a blank panel, so say so in words instead.
-  if (onRoute.length === 0) {
-    routeList.innerHTML = '<li class="empty">Nothing on your route right now</li>';
-  } else {
-    routeList.innerHTML = onRoute.map(routeItemHtml).join('');
-  }
+  let html = '';
+  if (message.unavailable) html += unavailableHtml(message.unavailable);
+  if (message.allClear) html += `<li class="empty">${ALL_CLEAR}</li>`;
+  html += onRoute.map(routeItemHtml).join('');
+  routeList.innerHTML = html;
 
   // Clicking an item zooms the map to that warning's shape (a polygon or a volcano's circle).
   routeList.onclick = (event) => {

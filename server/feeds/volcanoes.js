@@ -15,17 +15,22 @@ const POSITIONS_FILE = new URL('../../data/us-volcanoes.csv', import.meta.url);
 // the higher the alert, the bigger the area to stay clear of. GREEN (normal) isn't shown at all.
 const RADIUS_KM = { YELLOW: 50, ORANGE: 100, RED: 200 };
 
-// Fetch the elevated US volcanoes and return them as Warnings:
+// Fetch the elevated US volcanoes. Returns a feed result:
+//   { status: 'ok', fetchedAt, items }            USGS answered 200 with a list, even an empty one
+//                                                 (no elevated volcanoes really can happen)
+//   { status: 'no-data', fetchedAt: null, items: [] }   a 204, or a 200 with an empty body: it told us nothing
+// Both no-data cases are logged as a WARN, so a quiet feed shows up in the log (issue #23).
+// items are Warnings:
 //   { id, kind: 'volcano', hazard: 'VA', level, name, validFrom, validTo: null,
 //     shape: { type: 'circle', center: [lat, lon], radiusKm } }
-// level is the aviation colour code: YELLOW, ORANGE or RED. Returns [] for a 204 or an empty answer.
+// level is the aviation colour code: YELLOW, ORANGE or RED.
 // Throws an Error with .status for any other answer but 200.
 // Pass your own fetch to test without the network.
 export async function fetchVolcanoes({ fetch = globalThis.fetch } = {}) {
   const res = await fetch(FEED_URL, { headers: HEADERS });
   if (res.status === 204) {
-    log.info('volcano feed returned 204 (no data)');
-    return [];
+    log.warn('volcano feed returned 204 (no data), we have no volcano alerts right now');
+    return { status: 'no-data', fetchedAt: null, items: [] };
   }
   if (res.status !== 200) {
     log.warn(`volcano feed returned ${res.status}`);
@@ -33,9 +38,13 @@ export async function fetchVolcanoes({ fetch = globalThis.fetch } = {}) {
     err.status = res.status;
     throw err;
   }
+  const fetchedAt = new Date().toISOString();
   const text = await res.text();
-  if (!text.trim()) return [];
-  return JSON.parse(text).flatMap(toWarning);
+  if (!text.trim()) {
+    log.warn('volcano feed returned 200 with an empty body (no data), we have no volcano alerts right now');
+    return { status: 'no-data', fetchedAt: null, items: [] };
+  }
+  return { status: 'ok', fetchedAt, items: JSON.parse(text).flatMap(toWarning) };
 }
 
 // One volcano from the feed becomes one Warning, or none if it's GREEN or we can't place it.

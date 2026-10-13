@@ -105,6 +105,23 @@ main {
   background: none;
 }
 
+/* A feed has no data, so we can't say the route is clear (issue #23). */
+#route-list li.unavailable {
+  background: #fff4e6;
+  border-left: 4px solid #e8590c;
+  color: #7a2e00;
+  cursor: default;
+}
+
+#route-list li.unavailable:hover {
+  background: #fff4e6;
+}
+
+#route-list li.unavailable div {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
 #route-list .dot {
   display: inline-block;
   width: 10px;
@@ -180,6 +197,27 @@ footer a {
 /* Volcano alerts are circles on the map, so their swatches are round too. */
 .legend .swatch.round {
   border-radius: 50%;
+}
+
+/* On the map when a warning feed has no data (issue #23). */
+.feed-banner {
+  max-width: 260px;
+  padding: 6px 10px;
+  background: #fff4e6;
+  border-left: 4px solid #e8590c;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  color: #7a2e00;
+  font-size: 13px;
+}
+
+.feed-banner[hidden] {
+  display: none;
+}
+
+.feed-banner div {
+  margin-top: 2px;
+  font-size: 12px;
 }
 
 /* The small triangle at the centre of a volcano alert. */

@@ -2,15 +2,17 @@
 // instead of asking the feed on every request.
 //
 //   const poller = startPolling({ log, sources: [{ name: 'sigmets', everySeconds: 60, fetch: fetchSigmets }] });
-//   poller.latest('sigmets')   // the last good answer, or undefined before the first one arrives
+//   poller.latest('sigmets')   // the last result: { status: 'ok' | 'no-data', fetchedAt, items }
 //   poller.stopPolling()       // stop all the timers
 //
-// If a fetch fails we log a WARN and keep the previous data: slightly old warnings beat no warnings.
+// Each fetch returns a feed result (see feeds/sigmets.js). Before the first one arrives, latest() gives
+// { status: 'no-data', fetchedAt: null, items: [] }: "we don't know yet", never "there are no warnings" (issue #23).
+//
+// If a fetch fails (throws) we log a WARN and keep the previous result: slightly old warnings beat no warnings.
 // A good fetch is logged (INFO) only when the number of items changes, so the log isn't one line a minute
-// saying the same thing.
+// saying the same thing. A no-data answer isn't logged here: the feed already logs it as a WARN, every time.
 
-// How many things came back, for the log line (an array's length, a Map's size).
-const countOf = (data) => data?.length ?? data?.size ?? '?';
+const noDataYet = () => ({ status: 'no-data', fetchedAt: null, items: [] });
 
 export function startPolling({ sources, log }) {
   const results = new Map();
@@ -19,12 +21,15 @@ export function startPolling({ sources, log }) {
 
   async function poll(source) {
     try {
-      const data = await source.fetch();
-      const changed = !results.has(source.name) || countOf(results.get(source.name)) !== countOf(data);
-      results.set(source.name, data);
-      if (changed) log.info(`${source.name}: fetched ${countOf(data)} items`);
+      const result = await source.fetch();
+      const before = results.get(source.name);
+      results.set(source.name, result);
+      // Also log the first good fetch after a no-data spell, so the log shows when the feed came back.
+      const changed = !before || before.status !== 'ok' || before.items.length !== result.items.length;
+      if (result.status === 'ok' && changed) log.info(`${source.name}: fetched ${result.items.length} items`);
     } catch (err) {
-      const kept = results.has(source.name) ? `keeping previous data (${countOf(results.get(source.name))} items)` : 'no data yet';
+      const before = results.get(source.name);
+      const kept = before ? `keeping previous data (${before.status}, ${before.items.length} items)` : 'no data yet';
       log.warn(`${source.name}: fetch failed with status ${err.status ?? 'unknown'}, ${kept} (${err.message})`);
     }
     // Schedule the next fetch only once this one is done, so a slow feed never has two fetches running.
@@ -37,7 +42,7 @@ export function startPolling({ sources, log }) {
   for (const source of sources) poll(source);
 
   return {
-    latest: (name) => results.get(name),
+    latest: (name) => results.get(name) ?? noDataYet(),
     stopPolling() {
       stopped = true;
       for (const timer of timers.values()) clearTimeout(timer);

@@ -44,7 +44,7 @@ test('fetchSigmets asks aviationweather.gov for JSON and says who is asking', as
 test('fetchSigmets turns the sample into Warnings with polygons as [lat, lon] pairs', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const warnings = await fetchSigmets({ fetch });
+  const { items: warnings } = await fetchSigmets({ fetch });
 
   assert.ok(warnings.length > 0);
   for (const w of warnings) {
@@ -62,7 +62,7 @@ test('fetchSigmets turns the sample into Warnings with polygons as [lat, lon] pa
 test('fetchSigmets reads the Etna ash warning: name, times, and the polygon with lat first', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const etna = (await fetchSigmets({ fetch })).find((w) => w.id === 'LIRR-1-1793319000');
+  const etna = (await fetchSigmets({ fetch })).items.find((w) => w.id === 'LIRR-1-1793319000');
 
   assert.deepEqual(etna, {
     id: 'LIRR-1-1793319000',
@@ -88,14 +88,14 @@ test('fetchSigmets reads the Etna ash warning: name, times, and the polygon with
 test('fetchSigmets keeps every hazard in the sample', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const hazards = new Set((await fetchSigmets({ fetch })).map((w) => w.hazard));
+  const hazards = new Set((await fetchSigmets({ fetch })).items.map((w) => w.hazard));
   assert.deepEqual([...hazards].sort(), ['ICE', 'MTW', 'TC', 'TS', 'TURB', 'VA']);
 });
 
 test('fetchSigmets gives readable names, without the FIR code twice', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const names = new Set((await fetchSigmets({ fetch })).map((w) => w.name));
+  const names = new Set((await fetchSigmets({ fetch })).items.map((w) => w.name));
   assert.ok(names.has('Mountain waves, SHANNON FIR'));
   assert.ok(names.has('Turbulence, MELBOURNE FIR'));
   assert.ok(names.has('Thunderstorms, BRAZZAVILLE FIR'));
@@ -106,7 +106,7 @@ test('fetchSigmets gives readable names, without the FIR code twice', async (t) 
 test('fetchSigmets keeps a polygon that is not closed (Melbourne V15) with all its corners', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const v15 = (await fetchSigmets({ fetch })).find((w) => w.id.startsWith('YMMM-V15-'));
+  const v15 = (await fetchSigmets({ fetch })).items.find((w) => w.id.startsWith('YMMM-V15-'));
   assert.equal(v15.shape.coords.length, 6);
   assert.deepEqual(v15.shape.coords[0], [-21.333, 89]);
   assert.deepEqual(v15.shape.coords.at(-1), [-36.833, 111.5]);
@@ -115,7 +115,7 @@ test('fetchSigmets keeps a polygon that is not closed (Melbourne V15) with all i
 test('fetchSigmets splits an AREAS warning into one Warning per polygon, and wraps longitudes past 180', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const magadan = (await fetchSigmets({ fetch })).filter((w) => w.id.startsWith('UHMM-M01-'));
+  const magadan = (await fetchSigmets({ fetch })).items.filter((w) => w.id.startsWith('UHMM-M01-'));
   assert.equal(magadan.length, 3);
   assert.deepEqual(
     magadan.map((w) => w.id),
@@ -130,16 +130,33 @@ test('fetchSigmets splits an AREAS warning into one Warning per polygon, and wra
 test('fetchSigmets leaves out a warning that is a single point, and logs it', async (t) => {
   const readLog = captureLog(t);
   const { fetch } = fakeFetch();
-  const warnings = await fetchSigmets({ fetch });
+  const { items: warnings } = await fetchSigmets({ fetch });
   assert.equal(warnings.find((w) => w.id.startsWith('RJJJ-R02-')), undefined);
   assert.match(readLog(), /INFO  sigmet RJJJ R02 has 1 point, not a polygon: left out/);
 });
 
-test('fetchSigmets returns [] for a 204 (no data) and logs it as INFO', async (t) => {
+test('fetchSigmets says ok, with the time it arrived, when the feed answers with a list', async (t) => {
+  captureLog(t);
+  const before = Date.now();
+  const result = await fetchSigmets({ fetch: fakeFetch().fetch });
+  assert.equal(result.status, 'ok');
+  assert.ok(result.items.length > 0);
+  assert.ok(Date.parse(result.fetchedAt) >= before - 1000, `fetchedAt ${result.fetchedAt}`);
+  assert.equal(result.fetchedAt, new Date(result.fetchedAt).toISOString()); // an ISO time
+});
+
+test('fetchSigmets says ok for an empty list: the feed did answer', async (t) => {
+  captureLog(t);
+  const result = await fetchSigmets({ fetch: fakeFetch(200, '[]').fetch });
+  assert.equal(result.status, 'ok');
+  assert.deepEqual(result.items, []);
+});
+
+test('fetchSigmets says no-data for a 204, not "no warnings", and logs it as a WARN (issue #23)', async (t) => {
   const readLog = captureLog(t);
   const { fetch } = fakeFetch(204);
-  assert.deepEqual(await fetchSigmets({ fetch }), []);
-  assert.match(readLog(), /INFO  sigmet feed returned 204/);
+  assert.deepEqual(await fetchSigmets({ fetch }), { status: 'no-data', fetchedAt: null, items: [] });
+  assert.match(readLog(), /WARN  sigmet feed returned 204/);
 });
 
 test('fetchSigmets throws with status 500 and logs a WARN when the feed fails', async (t) => {
@@ -152,7 +169,7 @@ test('fetchSigmets throws with status 500 and logs a WARN when the feed fails', 
 test('fetchSigmets keeps one copy of a SIGMET sent twice (Brazzaville A1), so every id is unique', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const warnings = await fetchSigmets({ fetch });
+  const { items: warnings } = await fetchSigmets({ fetch });
   const ids = warnings.map((w) => w.id);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(ids.filter((id) => id.startsWith('FCCC-A1-')).length, 1);
@@ -161,7 +178,7 @@ test('fetchSigmets keeps one copy of a SIGMET sent twice (Brazzaville A1), so ev
 test('fetchSigmets says when an area is a forecast, and names the cyclone', async (t) => {
   captureLog(t);
   const { fetch } = fakeFetch();
-  const byId = new Map((await fetchSigmets({ fetch })).map((w) => [w.id, w]));
+  const byId = new Map((await fetchSigmets({ fetch })).items.map((w) => [w.id, w]));
   assert.equal(byId.get('LIRR-1F-1793319000').name, 'Volcanic ash, ROMA FIR (forecast area)');
   assert.equal(byId.get('LIRR-1-1793319000').name, 'Volcanic ash, ROMA FIR');
   assert.equal(byId.get('KZAK-TANGO 31-1793323200').name, 'Tropical cyclone IN-FA, OAKLAND OCEANIC FIR');

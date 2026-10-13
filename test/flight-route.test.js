@@ -29,7 +29,9 @@ test('GET /api/flight/:number returns the path from lookupFlight', async () => {
   });
   const res = await app.inject({ method: 'GET', url: '/api/flight/QFA1' });
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.json(), { ...qfa1, onRoute: [] }); // no poller, so no warnings on the route
+  // No poller, so no warnings on the route, and both feeds say they have no data.
+  const noDataFeed = { status: 'no-data', fetchedAt: null };
+  assert.deepEqual(res.json(), { ...qfa1, onRoute: [], feeds: { sigmets: noDataFeed, volcanoes: noDataFeed } });
   assert.deepEqual(asked, ['QFA1']); // already a callsign, so passed on as given
   await app.close();
 });
@@ -149,6 +151,7 @@ test('two searches for the same flight within 30 s ask OpenSky once (issue #11)'
 
 // Route check (core/route-check.js): the answer says which warnings the path passes near.
 const fakePoller = (results) => ({ latest: (name) => results[name] });
+const ok = (items) => ({ status: 'ok', fetchedAt: '2026-10-12T00:00:00.000Z', items });
 
 const sigmet = (id, coords) => ({
   id,
@@ -167,7 +170,7 @@ test('GET /api/flight/:number includes onRoute: the warnings the path passes nea
   const farAway = sigmet('YMMM-2', [[-36, 158], [-36, 160], [-38, 160], [-38, 158]]);
   const app = buildServer({
     lookupFlight: async () => qfa1,
-    poller: fakePoller({ sigmets: [onPath, farAway] }),
+    poller: fakePoller({ sigmets: ok([onPath, farAway]) }),
   });
   const res = await app.inject({ method: 'GET', url: '/api/flight/QFA1' });
   assert.equal(res.statusCode, 200);
@@ -199,7 +202,7 @@ test('GET /api/flight/:number includes volcano alerts near the path in onRoute, 
   const onPath = sigmet('YMMM-1', [[-32.5, 149.0], [-32.5, 151.0], [-33.5, 151.0], [-33.5, 149.0]]);
   const app = buildServer({
     lookupFlight: async () => qfa1,
-    poller: fakePoller({ sigmets: [onPath], volcanoes: [nearPath] }),
+    poller: fakePoller({ sigmets: ok([onPath]), volcanoes: ok([nearPath]) }),
   });
   const res = await app.inject({ method: 'GET', url: '/api/flight/QFA1' });
   assert.equal(res.statusCode, 200);

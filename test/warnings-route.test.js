@@ -5,6 +5,12 @@ import { buildServer } from '../server/server.js';
 // A stand-in for the poller: latest(name) answers from a plain object.
 const fakePoller = (results) => ({ latest: (name) => results[name] });
 
+// Feed results as the poller holds them (see server/poller.js).
+const fetchedAt = '2026-10-12T00:00:00.000Z';
+const ok = (items) => ({ status: 'ok', fetchedAt, items });
+const okFeed = { status: 'ok', fetchedAt };
+const noDataFeed = { status: 'no-data', fetchedAt: null };
+
 const warning = {
   id: 'sigmet-1',
   kind: 'turbulence',
@@ -12,25 +18,25 @@ const warning = {
 };
 
 test('GET /api/warnings returns the latest SIGMET warnings from the poller', async () => {
-  const app = buildServer({ poller: fakePoller({ sigmets: [warning] }) });
+  const app = buildServer({ poller: fakePoller({ sigmets: ok([warning]) }) });
   const res = await app.inject({ method: 'GET', url: '/api/warnings' });
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.json(), [warning]);
+  assert.deepEqual(res.json().warnings, [warning]);
   await app.close();
 });
 
-test('GET /api/warnings returns [] before the first fetch has come back', async () => {
+test('GET /api/warnings returns no warnings, marked no-data, before the first fetch has come back', async () => {
   const app = buildServer({ poller: fakePoller({}) });
   const res = await app.inject({ method: 'GET', url: '/api/warnings' });
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.json(), []);
+  assert.deepEqual(res.json(), { warnings: [], feeds: { sigmets: noDataFeed, volcanoes: noDataFeed } });
   await app.close();
 });
 
-test('GET /api/warnings returns [] when there is no poller at all (tests, or polling not started)', async () => {
+test('GET /api/warnings returns no warnings, marked no-data, when there is no poller (tests, or polling not started)', async () => {
   const app = buildServer();
   const res = await app.inject({ method: 'GET', url: '/api/warnings' });
-  assert.deepEqual(res.json(), []);
+  assert.deepEqual(res.json(), { warnings: [], feeds: { sigmets: noDataFeed, volcanoes: noDataFeed } });
   await app.close();
 });
 
@@ -41,18 +47,18 @@ const volcano = {
 };
 
 test('GET /api/warnings returns the SIGMETs and the volcano alerts together', async () => {
-  const app = buildServer({ poller: fakePoller({ sigmets: [warning], volcanoes: [volcano] }) });
+  const app = buildServer({ poller: fakePoller({ sigmets: ok([warning]), volcanoes: ok([volcano]) }) });
   const res = await app.inject({ method: 'GET', url: '/api/warnings' });
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.json(), [warning, volcano]);
+  assert.deepEqual(res.json().warnings, [warning, volcano]);
   await app.close();
 });
 
 test('GET /api/warnings returns just the SIGMETs while the volcano alerts are empty or not fetched yet', async () => {
-  for (const volcanoes of [[], undefined]) {
-    const app = buildServer({ poller: fakePoller({ sigmets: [warning], volcanoes }) });
+  for (const [volcanoes, status] of [[ok([]), okFeed], [undefined, noDataFeed]]) {
+    const app = buildServer({ poller: fakePoller({ sigmets: ok([warning]), volcanoes }) });
     const res = await app.inject({ method: 'GET', url: '/api/warnings' });
-    assert.deepEqual(res.json(), [warning]);
+    assert.deepEqual(res.json(), { warnings: [warning], feeds: { sigmets: okFeed, volcanoes: status } });
     await app.close();
   }
 });
