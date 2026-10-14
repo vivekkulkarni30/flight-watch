@@ -109,7 +109,7 @@ export function kmFromSegment(p, a, b) {
 // TODO: this doesn't look at validFrom/validTo yet, so a warning counts even if it has expired or not
 // started by the time the flight gets there.
 export function warningsOnRoute(path, warnings, { bufferKm = 50 } = {}) {
-  const legs = legsOf(path.points);
+  const legs = legsOf(densify(path.points));
   return warnings.filter((w) => {
     // Volcanoes are circles; everything else is a SIGMET polygon.
     if (w.kind === 'volcano') {

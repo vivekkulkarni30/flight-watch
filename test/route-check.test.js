@@ -197,13 +197,15 @@ const johannesburg = { lat: -26.13, lon: 28.24 };
 // round the Earth between them passes 37.6 S, 70.6 E, halfway along.
 const southernOceanStorm = sigmet('FIMM-7-1790000000', [[-36, 68.5], [-36, 72.5], [-39, 72.5], [-39, 68.5]]);
 
-test(
-  'warningsOnRoute: Perth to Johannesburg with no points over the ocean crosses a storm on the way the plane flies',
-  { todo: 'a long gap is joined with a straight line on the flat map, which runs about 950 km north of the real path here' },
-  () => {
-    assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
-  },
-);
+test('warningsOnRoute: Perth to Johannesburg with no points over the ocean crosses a storm on the way the plane flies', () => {
+  assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [southernOceanStorm]), [southernOceanStorm]);
+});
+
+test('warningsOnRoute: Perth to Johannesburg is clear of a storm on the straight line, 950 km north of the real path', () => {
+  // The same storm moved north to where the flat-map straight line runs (about 28.9 S at 70.6 E).
+  const offPathStorm = sigmet('FIMM-8-1790000000', [[-27.5, 68.5], [-27.5, 72.5], [-30.5, 72.5], [-30.5, 68.5]]);
+  assert.deepEqual(warningsOnRoute(path(perth, johannesburg), [offPathStorm]), []);
+});
 
 // densify -------------------------------------------------------------------------------------------
 
