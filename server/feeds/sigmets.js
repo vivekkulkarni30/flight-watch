@@ -41,7 +41,13 @@ export async function fetchSigmets({ fetch = globalThis.fetch } = {}) {
     throw err;
   }
   const fetchedAt = new Date().toISOString();
-  return { status: 'ok', fetchedAt, items: latestCopies(await res.json()).flatMap(toWarnings) };
+  return { status: 'ok', fetchedAt, items: parseSigmets(await res.json()) };
+}
+
+// Turn the feed's list of SIGMETs (the JSON as aviationweather.gov sends it) into Warnings, as above.
+// Replay mode (server/replay.js) uses this too, on a saved answer.
+export function parseSigmets(sigmets) {
+  return latestCopies(sigmets).flatMap(toWarnings);
 }
 
 // The same SIGMET (same FIR, number and start time) can arrive twice, e.g. resent to fix a typo in its
