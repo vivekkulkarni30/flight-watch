@@ -20,6 +20,7 @@ Keep dependencies to a minimum; add one only with a reason in the pull request.
 | `core/` | Plain logic with no web or network code, e.g. `route-check.js` (is a warning near the path?) |
 | `public/` | The page the browser loads: HTML, CSS, front-end JavaScript |
 | `data/` | Saved data files used by the feeds and tests |
+| `replay/` | Saved feed answers for replay mode (`REPLAY=<name> npm start`), one folder per scenario |
 | `test/` | Tests, one file per module (`<name>.test.js`) |
 
 ## Team rules
