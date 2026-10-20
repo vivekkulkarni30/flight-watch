@@ -92,25 +92,31 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // aviationweather.gov allows 100 requests a minute. The feed is loaded when first used, like the flight lookup.
   // OpenSky is not polled: we ask it only when someone searches (see /api/flight above). Polling it every 2 s
   // used up our daily allowance overnight (issue #11).
-  const poller = startPolling({
-    log,
-    sources: [
-      {
-        name: 'sigmets',
-        everySeconds: 60,
-        fetch: async () => (await import('./feeds/sigmets.js')).fetchSigmets(),
-      },
-      // Volcano alerts from USGS. Alert levels change over hours or days, not minutes, and USGS asks for
-      // reasonable use, so every 10 minutes is plenty: 144 requests a day.
-      {
-        name: 'volcanoes',
-        everySeconds: 600,
-        fetch: async () => (await import('./feeds/volcanoes.js')).fetchVolcanoes(),
-      },
-    ],
-  });
+  let lookupFlight = lookupFromOpenSky;
+  let sources = [
+    {
+      name: 'sigmets',
+      everySeconds: 60,
+      fetch: async () => (await import('./feeds/sigmets.js')).fetchSigmets(),
+    },
+    // Volcano alerts from USGS. Alert levels change over hours or days, not minutes, and USGS asks for
+    // reasonable use, so every 10 minutes is plenty: 144 requests a day.
+    {
+      name: 'volcanoes',
+      everySeconds: 600,
+      fetch: async () => (await import('./feeds/volcanoes.js')).fetchVolcanoes(),
+    },
+  ];
 
-  const app = buildServer({ poller });
+  // Replay mode: REPLAY=tasman serves saved answers from replay/tasman/ instead of the feeds that have a file
+  // there (see server/replay.js). Feeds without a file stay live. Loaded only when asked for, like the feeds.
+  if (process.env.REPLAY) {
+    const { applyReplay } = await import('./replay.js');
+    ({ lookupFlight, sources } = applyReplay(process.env.REPLAY, { lookupFlight, sources }));
+  }
+
+  const poller = startPolling({ log, sources });
+  const app = buildServer({ lookupFlight, poller });
   await app.listen({ port, host: '0.0.0.0' });
   log.info(`Flight Watch running at http://localhost:${port}`);
 }

@@ -1,0 +1,624 @@
+[
+  {
+    "icaoId": "LIIB",
+    "firId": "LIRR",
+    "firName": "LIRR ROMA",
+    "receiptTime": "2026-10-30T00:02:49.172Z",
+    "validTimeFrom": 1793319000,
+    "validTimeTo": 1793340600,
+    "seriesId": "1F",
+    "hazard": "VA",
+    "qualifier": "ERUPTION MT ETNA",
+    "base": 0,
+    "top": 13000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 15.45,
+        "lat": 37.367
+      },
+      {
+        "lon": 14.95,
+        "lat": 37.75
+      },
+      {
+        "lon": 15,
+        "lat": 37.8
+      },
+      {
+        "lon": 15.55,
+        "lat": 37.55
+      },
+      {
+        "lon": 15.45,
+        "lat": 37.367
+      }
+    ],
+    "dir": null,
+    "spd": null,
+    "chng": "NC",
+    "rawSigmet": "WVIY32 LIIB 300003\nLIRR SIGMET 1 VALID 300010/300610 LIIB-\nLIRR ROMA FIR VA ERUPTION MT ETNA PSN N3744 E01459 VA CLD OBS AT\n0000Z WI N3727 E01527 - N3745 E01500 - N3736 E01515 - N3733 E01527 -\nN3727 E01527 SFC/FL130 NC FCST AT 0600Z WI N3722 E01527 - N3745\nE01457 - N3748 E01500 - N3733 E01533 - N3722 E01527="
+  },
+  {
+    "icaoId": "LIIB",
+    "firId": "LIRR",
+    "firName": "LIRR ROMA",
+    "receiptTime": "2026-10-30T00:02:49.167Z",
+    "validTimeFrom": 1793319000,
+    "validTimeTo": 1793340600,
+    "seriesId": "1",
+    "hazard": "VA",
+    "qualifier": "ERUPTION MT ETNA",
+    "base": 0,
+    "top": 13000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 15.45,
+        "lat": 37.45
+      },
+      {
+        "lon": 15,
+        "lat": 37.75
+      },
+      {
+        "lon": 15.25,
+        "lat": 37.6
+      },
+      {
+        "lon": 15.45,
+        "lat": 37.55
+      },
+      {
+        "lon": 15.45,
+        "lat": 37.45
+      }
+    ],
+    "dir": null,
+    "spd": null,
+    "chng": "NC",
+    "rawSigmet": "WVIY32 LIIB 300003\nLIRR SIGMET 1 VALID 300010/300610 LIIB-\nLIRR ROMA FIR VA ERUPTION MT ETNA PSN N3744 E01459 VA CLD OBS AT\n0000Z WI N3727 E01527 - N3745 E01500 - N3736 E01515 - N3733 E01527 -\nN3727 E01527 SFC/FL130 NC FCST AT 0600Z WI N3722 E01527 - N3745\nE01457 - N3748 E01500 - N3733 E01533 - N3722 E01527="
+  },
+  {
+    "icaoId": "EIDB",
+    "firId": "EISN",
+    "firName": "EISN SHANNON",
+    "receiptTime": "2026-10-30T00:09:34.835Z",
+    "validTimeFrom": 1793320200,
+    "validTimeTo": 1793334600,
+    "seriesId": "01",
+    "hazard": "MTW",
+    "qualifier": "SEV",
+    "base": 6000,
+    "top": 22000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": -8.164,
+        "lat": 54.419
+      },
+      {
+        "lon": -8.17,
+        "lat": 54.42
+      },
+      {
+        "lon": -7.087,
+        "lat": 55.209
+      },
+      {
+        "lon": -6.921,
+        "lat": 55.33
+      },
+      {
+        "lon": -6.935,
+        "lat": 55.333
+      },
+      {
+        "lon": -8.216,
+        "lat": 55.333
+      },
+      {
+        "lon": -8.25,
+        "lat": 55.33
+      },
+      {
+        "lon": -9,
+        "lat": 54.75
+      },
+      {
+        "lon": -9,
+        "lat": 54.75
+      },
+      {
+        "lon": -9,
+        "lat": 54.75
+      },
+      {
+        "lon": -9,
+        "lat": 54.75
+      },
+      {
+        "lon": -10,
+        "lat": 54.5
+      },
+      {
+        "lon": -10.166,
+        "lat": 54.483
+      },
+      {
+        "lon": -10,
+        "lat": 51.417
+      },
+      {
+        "lon": -7.417,
+        "lat": 52.167
+      },
+      {
+        "lon": -7.5,
+        "lat": 54.25
+      },
+      {
+        "lon": -8.167,
+        "lat": 54.417
+      },
+      {
+        "lon": -8.164,
+        "lat": 54.419
+      }
+    ],
+    "dir": "-",
+    "spd": "0",
+    "chng": "WKN",
+    "rawSigmet": "WSIE31 EIDB 300002\nEISN SIGMET 01 VALID 300030/300430 EINN-\nEISN SHANNON FIR\nSEV MTW FCST WI N5520 W00655 - N5425 W00810 - N5415 W00730 - N5210\nW00725 - N5125 W01000 - N5430 W01010 - N5445 W00900 - N5520 W00815 -\nN5520 W00655 FL060/220 STNR WKN="
+  },
+  {
+    "icaoId": "YMMC",
+    "firId": "YMMM",
+    "firName": "YMMM MELBOURNE",
+    "receiptTime": "2026-10-30T00:29:18.278Z",
+    "validTimeFrom": 1793320200,
+    "validTimeTo": 1793334600,
+    "seriesId": "V15",
+    "hazard": "TURB",
+    "qualifier": "SEV",
+    "base": 26000,
+    "top": 35000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 89,
+        "lat": -21.333
+      },
+      {
+        "lon": 95,
+        "lat": -21
+      },
+      {
+        "lon": 116.833,
+        "lat": -33.667
+      },
+      {
+        "lon": 129.5,
+        "lat": -34.5
+      },
+      {
+        "lon": 130.667,
+        "lat": -37.167
+      },
+      {
+        "lon": 111.5,
+        "lat": -36.833
+      }
+    ],
+    "dir": "E",
+    "spd": "35",
+    "chng": "NC",
+    "rawSigmet": "WSAU21 YMMC 300028\nYMMM SIGMET V15 VALID 300030/300430 YMMC-\nYMMM MELBOURNE FIR SEV TURB FCST WI S2120 E08900 - S2100 E09500 -\nS3340 E11650 - S3430 E12930 - S3710 E13040 - S3650 E11130 FL260/350\nMOV E 35KT NC="
+  },
+  {
+    "icaoId": "PHFO",
+    "firId": "KZAK",
+    "firName": "OAKLAND OCEANIC",
+    "receiptTime": "2026-10-30T01:18:54.918Z",
+    "validTimeFrom": 1793323200,
+    "validTimeTo": 1793344800,
+    "seriesId": "TANGO 31",
+    "hazard": "TC",
+    "qualifier": "IN-FA",
+    "base": null,
+    "top": 52000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 147.833,
+        "lat": 20.583
+      },
+      {
+        "lon": 148.32,
+        "lat": 20.543
+      },
+      {
+        "lon": 148.792,
+        "lat": 20.423
+      },
+      {
+        "lon": 149.235,
+        "lat": 20.226
+      },
+      {
+        "lon": 149.635,
+        "lat": 19.959
+      },
+      {
+        "lon": 149.98,
+        "lat": 19.631
+      },
+      {
+        "lon": 150.26,
+        "lat": 19.25
+      },
+      {
+        "lon": 150.467,
+        "lat": 18.829
+      },
+      {
+        "lon": 150.593,
+        "lat": 18.38
+      },
+      {
+        "lon": 150.636,
+        "lat": 17.917
+      },
+      {
+        "lon": 150.593,
+        "lat": 17.454
+      },
+      {
+        "lon": 150.467,
+        "lat": 17.005
+      },
+      {
+        "lon": 150.26,
+        "lat": 16.583
+      },
+      {
+        "lon": 149.98,
+        "lat": 16.203
+      },
+      {
+        "lon": 149.635,
+        "lat": 15.874
+      },
+      {
+        "lon": 149.235,
+        "lat": 15.607
+      },
+      {
+        "lon": 148.792,
+        "lat": 15.411
+      },
+      {
+        "lon": 148.32,
+        "lat": 15.291
+      },
+      {
+        "lon": 147.833,
+        "lat": 15.25
+      },
+      {
+        "lon": 147.347,
+        "lat": 15.291
+      },
+      {
+        "lon": 146.875,
+        "lat": 15.411
+      },
+      {
+        "lon": 146.432,
+        "lat": 15.607
+      },
+      {
+        "lon": 146.032,
+        "lat": 15.874
+      },
+      {
+        "lon": 145.686,
+        "lat": 16.203
+      },
+      {
+        "lon": 145.406,
+        "lat": 16.583
+      },
+      {
+        "lon": 145.2,
+        "lat": 17.005
+      },
+      {
+        "lon": 145.073,
+        "lat": 17.454
+      },
+      {
+        "lon": 145.031,
+        "lat": 17.917
+      },
+      {
+        "lon": 145.073,
+        "lat": 18.38
+      },
+      {
+        "lon": 145.2,
+        "lat": 18.829
+      },
+      {
+        "lon": 145.406,
+        "lat": 19.25
+      },
+      {
+        "lon": 145.686,
+        "lat": 19.631
+      },
+      {
+        "lon": 146.032,
+        "lat": 19.959
+      },
+      {
+        "lon": 146.432,
+        "lat": 20.226
+      },
+      {
+        "lon": 146.875,
+        "lat": 20.423
+      },
+      {
+        "lon": 147.347,
+        "lat": 20.543
+      },
+      {
+        "lon": 147.833,
+        "lat": 20.583
+      }
+    ],
+    "dir": "WNW",
+    "spd": "18",
+    "chng": "NC",
+    "rawSigmet": "WCPA07 PHFO 300118\n\nKZAK SIGMET TANGO 31 VALID 300120/300720 PHFO-\nOAKLAND OCEANIC FIR TC IN-FA OBS AT 0000Z N1755 E14750. CB TOP FL520\nWI 160NM OF CENTER. MOV WNW 18KT. NC. FCST 0600Z TC CENTER N1840\nE14610."
+  },
+  {
+    "icaoId": "FCBB",
+    "firId": "FCCC",
+    "firName": "FCCC BRAZZAVILLE",
+    "receiptTime": "2026-10-30T01:17:00.991Z",
+    "validTimeFrom": 1793325600,
+    "validTimeTo": 1793340000,
+    "seriesId": "A1",
+    "hazard": "TS",
+    "qualifier": "EMBD",
+    "base": null,
+    "top": null,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 8.767,
+        "lat": 0.433
+      },
+      {
+        "lon": 12.633,
+        "lat": 8
+      },
+      {
+        "lon": 20.55,
+        "lat": 8
+      },
+      {
+        "lon": 14.233,
+        "lat": -0.817
+      },
+      {
+        "lon": 8.767,
+        "lat": 0.433
+      }
+    ],
+    "dir": null,
+    "spd": null,
+    "chng": null,
+    "rawSigmet": "WSCG31 FCBB 290116\nFCCC SIGMET A1 VALID 300200/300600 FCBB-\nFCCC BRAZZAVILLE FIR/UIR EMBD TS OBS AT 0100Z\nWI N0026 E00846 - N0800 E01238 - N0800 E02033 - S0049 E01414 - N0026\nE00846\nW OF LINE N0442 E00833 - N0327 E00800\nE OF LINE N0726 E02511 - N0624 E02524\nTOP FL450 MOV W 10KT WKN="
+  },
+  {
+    "icaoId": "FCBB",
+    "firId": "FCCC",
+    "firName": "FCCC BRAZZAVILLE",
+    "receiptTime": "2026-10-30T01:21:29.745Z",
+    "validTimeFrom": 1793325600,
+    "validTimeTo": 1793340000,
+    "seriesId": "A1",
+    "hazard": "TS",
+    "qualifier": "EMBD",
+    "base": null,
+    "top": null,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 8.767,
+        "lat": 0.433
+      },
+      {
+        "lon": 12.633,
+        "lat": 8
+      },
+      {
+        "lon": 20.55,
+        "lat": 8
+      },
+      {
+        "lon": 14.233,
+        "lat": -0.817
+      },
+      {
+        "lon": 8.767,
+        "lat": 0.433
+      }
+    ],
+    "dir": null,
+    "spd": null,
+    "chng": null,
+    "rawSigmet": "WSCG31 FCBB 300116\nFCCC SIGMET A1 VALID 300200/300600 FCBB-\nFCCC BRAZZAVILLE FIR/UIR EMBD TS OBS AT 0100Z\nWI N0026 E00846 - N0800 E01238 - N0800 E02033 - S0049 E01414 - N0026\nE00846\nW OF LINE N0442 E00833 - N0327 E00800\nE OF LINE N0726 E02511 - N0624 E02524\nTOP FL450 MOV W 10KT WKN="
+  },
+  {
+    "icaoId": "RJTD",
+    "firId": "RJJJ",
+    "firName": "RJJJ FUKUOKA",
+    "receiptTime": "2026-10-30T03:40:02.945Z",
+    "validTimeFrom": 1793331540,
+    "validTimeTo": 1793353140,
+    "seriesId": "R02",
+    "hazard": "VA",
+    "qualifier": null,
+    "base": null,
+    "top": 9000,
+    "geom": "AREA",
+    "coords": [
+      {
+        "lon": 130.883,
+        "lat": 31.667
+      }
+    ],
+    "dir": "-",
+    "spd": "0",
+    "chng": null,
+    "rawSigmet": "WVJP31 RJTD 300339\nRJJJ SIGMET R02 VALID 300339/300939 RJTD-\nRJJJ FUKUOKA FIR MT SAKURAJIMA (AIRA CALDERA) PSN N3136 E13039 VA CLD\nOBS AT 0305Z N3140E13053 FL090 STNR="
+  },
+  {
+    "icaoId": "RUMG",
+    "firId": "UHMM",
+    "firName": "UHMM MAGADAN",
+    "receiptTime": "2026-10-30T02:19:59.286Z",
+    "validTimeFrom": 1793332800,
+    "validTimeTo": 1793340000,
+    "seriesId": "M01",
+    "hazard": "ICE",
+    "qualifier": "SEV",
+    "base": 0,
+    "top": 8000,
+    "geom": "AREAS",
+    "coords": [
+      [
+        {
+          "lon": 180,
+          "lat": 61.517
+        },
+        {
+          "lon": 180,
+          "lat": 64
+        },
+        {
+          "lon": 173,
+          "lat": 64
+        },
+        {
+          "lon": 173,
+          "lat": 62.333
+        },
+        {
+          "lon": 174.75,
+          "lat": 61.833
+        },
+        {
+          "lon": 180,
+          "lat": 61.517
+        }
+      ],
+      [
+        {
+          "lon": 180,
+          "lat": 65
+        },
+        {
+          "lon": 180,
+          "lat": 67.017
+        },
+        {
+          "lon": 179,
+          "lat": 67
+        },
+        {
+          "lon": 179,
+          "lat": 66
+        },
+        {
+          "lon": 180,
+          "lat": 65
+        }
+      ],
+      [
+        {
+          "lon": 180,
+          "lat": 61.517
+        },
+        {
+          "lon": 180,
+          "lat": 64
+        },
+        {
+          "lon": 180,
+          "lat": 64
+        },
+        {
+          "lon": 180,
+          "lat": 65
+        },
+        {
+          "lon": 180,
+          "lat": 65
+        },
+        {
+          "lon": 180,
+          "lat": 67.017
+        },
+        {
+          "lon": 184,
+          "lat": 67.083
+        },
+        {
+          "lon": 187,
+          "lat": 67.067
+        },
+        {
+          "lon": 190.5,
+          "lat": 67.009
+        },
+        {
+          "lon": 190.5,
+          "lat": 65
+        },
+        {
+          "lon": 187.5,
+          "lat": 64
+        },
+        {
+          "lon": 183.74,
+          "lat": 62.19
+        },
+        {
+          "lon": 182.415,
+          "lat": 61.414
+        },
+        {
+          "lon": 182.25,
+          "lat": 61.333
+        },
+        {
+          "lon": 180,
+          "lat": 61.517
+        },
+        {
+          "lon": 180,
+          "lat": 61.517
+        }
+      ]
+    ],
+    "dir": "-",
+    "spd": "0",
+    "chng": "NC",
+    "rawSigmet": "WSRA31 RUMG 300219\nUHMM SIGMET M01 VALID 300400/300600 UHMM-\nUHMM MAGADAN FIR SEV ICE FCST WI\nN6705 W17600 - N6704 W17300 - N6700 W16858 -\nN6500 W16858 - N6403 W17212 - N6120 W17745 -\nN6131 E18000 - N6150 E17445 - N6220 E17300 -\nN6400 E17300 - N6400 E18000 - N6500 E18000 -\nN6600 E17900 - N6700 E17900 - N6705 W17600\nSFC/FL080 STNR NC="
+  }
+]

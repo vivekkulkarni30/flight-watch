@@ -36,9 +36,14 @@ export async function lookupFlight(callsign, { fetch = globalThis.fetch } = {}) 
   if (!state) return null;
   const icao24 = state[0];
 
-  // Each track point is [time, lat, lon, baroAltitudeM, trueTrack, onGround]; we keep the first four.
   const track = await getJson(`${API}/tracks/all?icao24=${icao24}&time=0`, fetch);
-  const points = track.path.map(([t, lat, lon, altM]) => ({ t, lat, lon, altM }));
+  return parseTrack(callsign, icao24, track);
+}
 
+// Turn an answer from tracks/all into a path: { callsign, icao24, points: [{ t, lat, lon, altM }] }.
+// Each track point is [time, lat, lon, baroAltitudeM, trueTrack, onGround]; we keep the first four.
+// Replay mode (server/replay.js) uses this too, on a saved track.
+export function parseTrack(callsign, icao24, track) {
+  const points = track.path.map(([t, lat, lon, altM]) => ({ t, lat, lon, altM }));
   return { callsign, icao24, points };
 }

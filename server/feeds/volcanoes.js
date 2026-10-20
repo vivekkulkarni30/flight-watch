@@ -44,7 +44,13 @@ export async function fetchVolcanoes({ fetch = globalThis.fetch } = {}) {
     log.warn('volcano feed returned 200 with an empty body (no data), we have no volcano alerts right now');
     return { status: 'no-data', fetchedAt: null, items: [] };
   }
-  return { status: 'ok', fetchedAt, items: JSON.parse(text).flatMap(toWarning) };
+  return { status: 'ok', fetchedAt, items: parseVolcanoes(JSON.parse(text)) };
+}
+
+// Turn USGS's list of elevated volcanoes (the JSON as it sends it) into Warnings, as above.
+// Replay mode (server/replay.js) uses this too, on a saved answer.
+export function parseVolcanoes(volcanoes) {
+  return volcanoes.flatMap(toWarning);
 }
 
 // One volcano from the feed becomes one Warning, or none if it's GREEN or we can't place it.
