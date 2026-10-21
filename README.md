@@ -3,7 +3,18 @@
 Type a flight number and see where it's going: its path on a world map, plus the aviation warnings near it
 (storms, turbulence, icing, volcanic ash and volcano alerts).
 
-For learning only, not for flight planning.
+**For learning only, not for flight planning.**
+
+## What it does
+
+- **Search by flight number**, as it appears on a booking (`QF1`). The server turns it into the callsign the
+  plane broadcasts (`QFA1`) and asks OpenSky where that plane has been.
+- **Draws the path** on the map, with large airports shown as dots.
+- **Draws the warnings**: SIGMETs (official warnings to pilots about storms, turbulence, icing, volcanic ash and
+  more) as shapes, and US volcano alerts as circles sized by their colour code.
+- **"On your route"** lists the warnings the path passes through or comes within 50 km of.
+- **Says when it doesn't know.** If a warning feed has no data, the map and the route panel say
+  "Warning data unavailable" and name the feed, instead of "Nothing on your route right now".
 
 ## Run it
 
@@ -22,14 +33,32 @@ Then open http://localhost:3000. Set `PORT` to use a different port.
 npm test
 ```
 
-Tests use Node's built-in test runner and live in `test/`.
+Tests use Node's built-in test runner and live in `test/`. They read saved samples from `test/fixtures/`, so
+they don't need the network.
 
-## Team
+## Logs
 
-| Who | Looks after |
-|---|---|
-| Gaurav Gupta | Lead, route check (`core/route-check.js`) |
-| Daniel Sutantyo | Tests, logs, CI |
-| Mei Lin Tan | Data feeds (`server/feeds/`, `data/`) |
-| Josh Okafor | Back end (`server/`) |
-| Liam Nguyen | Front end (`public/`) |
+The server writes one plain line per event, to the screen and to `logs/app.log` (set `LOG_FILE` to use another
+file):
+
+```
+2026-10-12 07:40:12 WARN  sigmet feed returned 204 (no data), we have no SIGMETs right now
+```
+
+## Data sources
+
+| What | From | Licence |
+|---|---|---|
+| Flight positions and paths | [OpenSky Network](https://opensky-network.org) | Free for non-commercial use |
+| Airports | [OurAirports](https://ourairports.com) | Public domain |
+| Airline codes | [OpenFlights](https://openflights.org) | Open Database License (ODbL) 1.0 |
+| SIGMET warnings | [aviationweather.gov](https://aviationweather.gov) | US government work |
+| Volcano alerts | [USGS](https://volcanoes.usgs.gov/hans-public/) | US government work |
+
+Thanks to all of them. The saved files, and how to refresh them, are described in
+[`data/README.md`](data/README.md).
+
+## More
+
+The project wiki has the rest: getting started, who owns what, each data source's limits and quirks, how the
+map layers work, what to do when a feed goes quiet, and how to read the logs.
