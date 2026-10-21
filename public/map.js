@@ -1,6 +1,10 @@
 // The world map. Leaflet is loaded from the CDN in index.html.
 import { levelColour } from './levels.js';
 import { routeMessage, feedProblems, ALL_CLEAR, UNAVAILABLE_TITLE } from './route-message.js';
+import { escapeHtml } from './text.js';
+
+// Leaflet tooltips take HTML, and so does the route list. Anything from a feed (names, ids, levels,
+// callsigns) goes through escapeHtml first, so it shows as text instead of being read as HTML.
 
 const map = L.map('map').setView([20, 0], 2);
 
@@ -24,7 +28,7 @@ async function showAirports() {
         fillColor: '#3c78c3',
         fillOpacity: 0.8,
       })
-        .bindTooltip(`${airport.iata} ${airport.name}`)
+        .bindTooltip(`${escapeHtml(airport.iata)} ${escapeHtml(airport.name)}`)
         .addTo(map);
     }
   } catch (err) {
@@ -56,7 +60,7 @@ function clearFlight() {
 function showFlight(flight) {
   const points = flight.points.map((p) => [p.lat, p.lon]);
   const path = L.polyline(points, { color: '#d9480f', weight: 3 });
-  const plane = L.marker(points[points.length - 1]).bindTooltip(flight.callsign, { permanent: true });
+  const plane = L.marker(points[points.length - 1]).bindTooltip(escapeHtml(flight.callsign), { permanent: true });
 
   flightLayer = L.layerGroup([path, plane]).addTo(map);
   map.fitBounds(path.getBounds(), { padding: [40, 40] });
@@ -154,7 +158,7 @@ function formatTime(iso) {
 // Leaflet wants the radius in metres, and the feed gives it in km.
 function drawVolcano(warning) {
   const colour = levelColour(warning.level);
-  const tooltip = `${warning.name}<br>Volcano alert: ${levelWord(warning.level)}`;
+  const tooltip = `${escapeHtml(warning.name)}<br>Volcano alert: ${escapeHtml(levelWord(warning.level))}`;
   const circle = L.circle(warning.shape.center, {
     radius: warning.shape.radiusKm * 1000,
     color: colour,
@@ -183,7 +187,7 @@ function drawWarnings(warnings) {
       weight: 1,
       fillColor: style.color,
       fillOpacity: 0.3,
-    }).bindTooltip(`${warning.name}<br>${style.label}<br>Valid until ${formatTime(warning.validTo)}`);
+    }).bindTooltip(`${escapeHtml(warning.name)}<br>${style.label}<br>Valid until ${formatTime(warning.validTo)}`);
     shapes.push(polygon);
     byId.set(warning.id, polygon);
   }
@@ -267,13 +271,13 @@ let routeIds = new Set();
 function routeItemHtml(warning) {
   // Volcano alerts have a level instead of a hazard colour, and no end time.
   if (warning.kind === 'volcano') {
-    return `<li data-id="${warning.id}">
-    <span class="dot" style="background:${levelColour(warning.level)}"></span>Volcano alert (${warning.level.toLowerCase()}): ${warning.name}
+    return `<li data-id="${escapeHtml(warning.id)}">
+    <span class="dot" style="background:${levelColour(warning.level)}"></span>Volcano alert (${escapeHtml(warning.level.toLowerCase())}): ${escapeHtml(warning.name)}
   </li>`;
   }
   const style = hazardStyle(warning.hazard);
-  return `<li data-id="${warning.id}">
-    <span class="dot" style="background:${style.color}"></span>${style.label}: ${warning.name}
+  return `<li data-id="${escapeHtml(warning.id)}">
+    <span class="dot" style="background:${style.color}"></span>${style.label}: ${escapeHtml(warning.name)}
     <div class="until">until ${formatTime(warning.validTo)}</div>
   </li>`;
 }
