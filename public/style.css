@@ -153,11 +153,11 @@ main {
   }
 
   #route-toggle::after {
-    content: ' B4';
+    content: ' ▴';
   }
 
   #route-panel.collapsed #route-toggle::after {
-    content: ' BE';
+    content: ' ▾';
   }
 
   #route-panel.collapsed #route-list {

@@ -63,6 +63,8 @@ function showFlight(flight) {
   const plane = L.marker(points[points.length - 1]).bindTooltip(escapeHtml(flight.callsign), { permanent: true });
 
   flightLayer = L.layerGroup([path, plane]).addTo(map);
+  // The route panel may have just changed the map's width: let Leaflet measure again before zooming.
+  map.invalidateSize();
   map.fitBounds(path.getBounds(), { padding: [40, 40] });
 }
 
@@ -99,8 +101,9 @@ searchForm.addEventListener('submit', async (event) => {
       return;
     }
 
-    showFlight(data);
+    // Panel first: it narrows the map, and the path should fit the map that's left.
     showRoutePanel(data.onRoute, data.feeds);
+    showFlight(data);
   } catch (err) {
     message.textContent = 'Flight data is unavailable right now, try again soon.';
   }
