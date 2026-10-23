@@ -19,15 +19,19 @@ Keep dependencies to a minimum; add one only with a reason in the pull request.
 | `server/feeds/` | One file per outside data source (flight positions, airlines, airports, warnings, volcanoes) |
 | `core/` | Plain logic with no web or network code, e.g. `route-check.js` (is a warning near the path?) |
 | `public/` | The page the browser loads: HTML, CSS, front-end JavaScript |
-| `data/` | Saved data files used by the feeds and tests |
+| `data/` | Saved data files used by the feeds and tests (sources and licences in `data/README.md`) |
+| `scripts/` | Scripts that rebuild the files in `data/` from their sources |
 | `replay/` | Saved feed answers for replay mode (`REPLAY=<name> npm start`), one folder per scenario |
-| `test/` | Tests, one file per module (`<name>.test.js`) |
+| `test/` | Tests, one file per module (`<name>.test.js`); `test/fixtures/` holds small real samples |
+| `tools/` | Helpers for running things, e.g. keeping test log lines out of `logs/app.log` |
+
+More (data sources, replay mode, reading the logs, when a feed goes quiet) is in the project wiki.
 
 ## Team rules
 
 - Every change starts from an issue, goes on its own branch and comes in through a pull request.
 - Never push to `main` directly.
 - A bug fix comes with a test that failed before the fix.
-- All logging goes through `server/log.js` (being added this week), not `console.log`.
+- All logging goes through `server/log.js`, not `console.log`. Logs go to `logs/app.log` (or `LOG_FILE`).
 - Plain English in commit messages, comments and docs. Say what changed and why.
 - `buildServer()` in `server/server.js` returns the app without listening; tests use `app.inject()`.
