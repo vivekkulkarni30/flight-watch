@@ -62,7 +62,7 @@ file):
 
 | What | From | Licence |
 |---|---|---|
-| Flight positions and paths | [OpenSky Network](https://opensky-network.org) | Free for non-commercial use |
+| Flight positions and paths | [OpenSky Network](https://opensky-network.org) | Free for non-profit research and education; cite OpenSky |
 | Airports | [OurAirports](https://ourairports.com) | Public domain |
 | Airline codes | [OpenFlights](https://openflights.org) | Open Database License (ODbL) 1.0 |
 | SIGMET warnings | [aviationweather.gov](https://aviationweather.gov) | US government work |
@@ -75,3 +75,7 @@ Thanks to all of them. The saved files, and how to refresh them, are described i
 
 The project wiki has the rest: getting started, who owns what, each data source's limits and quirks, how the
 map layers work, what to do when a feed goes quiet, and how to read the logs.
+
+## Licence
+
+The code is under the MIT licence (see `LICENSE`). The data files keep their own licences: see `data/README.md`.
