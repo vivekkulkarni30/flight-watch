@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server/server.js",
-    "test": "node --test"
+    "test": "node --import ./tools/log-to-temp.js --test"
   },
   "dependencies": {
     "@fastify/static": "^10.1.8",
