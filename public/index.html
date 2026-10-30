@@ -6,6 +6,21 @@
   <title>Flight Watch</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="style.css">
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme =
+          savedTheme === 'dark' || savedTheme === 'light'
+            ? savedTheme
+            : prefersDark ? 'dark' : 'light';
+      } catch {
+        document.documentElement.dataset.theme =
+          window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+    })();
+  </script>
 </head>
 <body>
   <header>
@@ -14,6 +29,7 @@
       <input id="flight" type="text" placeholder="Flight number, e.g. QF144" aria-label="Flight number">
       <button type="submit">Search</button>
     </form>
+    <button id="theme-toggle" type="button">Dark mode</button>
     <span id="message" role="status"></span>
   </header>
   <main>

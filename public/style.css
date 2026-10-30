@@ -1,4 +1,40 @@
-html, body {
+:root {
+  color-scheme: light;
+
+  --page-bg: #ffffff;
+  --text-color: #222222;
+  --panel-bg: #ffffff;
+  --panel-border: #dddddd;
+  --panel-hover: #f5f8fc;
+  --muted-text: #666666;
+  --footer-bg: #f2f2f2;
+  --legend-bg: #ffffff;
+  --banner-bg: #fff4e6;
+  --banner-text: #7a2e00;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --page-bg: #171b24;
+  --text-color: #e6eaf0;
+  --panel-bg: #222936;
+  --panel-border: #3b4555;
+  --panel-hover: #303b4d;
+  --muted-text: #aab4c3;
+  --footer-bg: #202735;
+  --legend-bg: #222936;
+  --banner-bg: #49321f;
+  --banner-text: #ffd8a8;
+}
+
+/* Darken only the map tiles, not markers or warning overlays. */
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9);
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
 }
@@ -7,6 +43,8 @@ body {
   display: flex;
   flex-direction: column;
   font-family: system-ui, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-color);
 }
 
 header {
@@ -59,8 +97,8 @@ main {
 #route-panel {
   width: 280px;
   overflow-y: auto;
-  border-left: 1px solid #ddd;
-  background: white;
+  border-left: 1px solid var(--panel-border);
+  background: var(--panel-bg);
   font-size: 14px;
 }
 
@@ -72,8 +110,9 @@ main {
   width: 100%;
   padding: 8px 12px;
   border: none;
-  border-bottom: 1px solid #ddd;
-  background: #f2f2f2;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--footer-bg);
+  color: var(--text-color);
   font: inherit;
   font-weight: bold;
   text-align: left;
@@ -88,16 +127,16 @@ main {
 
 #route-list li {
   padding: 8px 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--panel-border);
   cursor: pointer;
 }
 
 #route-list li:hover {
-  background: #f5f8fc;
+  background: var(--panel-hover);
 }
 
 #route-list li.empty {
-  color: #666;
+  color: var(--muted-text);
   cursor: default;
 }
 
@@ -107,14 +146,14 @@ main {
 
 /* A feed has no data, so we can't say the route is clear (issue #23). */
 #route-list li.unavailable {
-  background: #fff4e6;
+  background: var(--banner-bg);
   border-left: 4px solid #e8590c;
-  color: #7a2e00;
+  color: var(--banner-text);
   cursor: default;
 }
 
 #route-list li.unavailable:hover {
-  background: #fff4e6;
+  background: var(--banner-bg);
 }
 
 #route-list li.unavailable div {
@@ -131,7 +170,7 @@ main {
 }
 
 #route-list .until {
-  color: #666;
+  color: var(--muted-text);
   font-size: 12px;
 }
 
@@ -145,7 +184,7 @@ main {
     width: auto;
     max-height: 40%;
     border-left: none;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--panel-border);
   }
 
   #route-toggle {
@@ -167,8 +206,8 @@ main {
 
 footer {
   padding: 4px 16px;
-  background: #f2f2f2;
-  color: #555;
+  background: var(--footer-bg);
+  color: var(--muted-text);
   font-size: 12px;
 }
 
@@ -178,7 +217,8 @@ footer a {
 
 .legend {
   padding: 6px 8px;
-  background: white;
+  background: var(--legend-bg);
+  color: var(--text-color);
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   font-size: 12px;
@@ -203,11 +243,11 @@ footer a {
 .feed-banner {
   max-width: 260px;
   padding: 6px 10px;
-  background: #fff4e6;
+  background: var(--banner-bg);
   border-left: 4px solid #e8590c;
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  color: #7a2e00;
+  color: var(--banner-text);
   font-size: 13px;
 }
 
@@ -227,4 +267,22 @@ footer a {
   line-height: 14px;
   text-align: center;
   text-shadow: 0 0 2px white;
+}
+#theme-toggle {
+  padding: 5px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+  background: transparent;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+#theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#theme-toggle:focus-visible {
+  outline: 2px solid #ffd27f;
+  outline-offset: 2px;
 }

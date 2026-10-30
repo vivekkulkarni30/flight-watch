@@ -3,6 +3,55 @@ import { levelColour } from './levels.js';
 import { routeMessage, feedProblems, ALL_CLEAR, UNAVAILABLE_TITLE } from './route-message.js';
 import { escapeHtml } from './text.js';
 
+// Theme management: follow system preference unless manually overridden.
+const themeToggle = document.getElementById('theme-toggle');
+const themePreference = window.matchMedia('(prefers-color-scheme: dark)');
+
+function getSavedTheme() {
+  try {
+    const theme = localStorage.getItem('theme');
+    return theme === 'dark' || theme === 'light' ? theme : null;
+  } catch {
+    return null;
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+
+  if (!themeToggle) return;
+
+  themeToggle.textContent = theme === 'dark' ? 'Light mode' : 'Dark mode';
+
+  themeToggle.setAttribute(
+    'aria-label',
+    `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`,
+  );
+}
+
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.dataset.theme;
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    try {
+      localStorage.setItem('theme', newTheme);
+    } catch {
+      // The theme still works for this page.
+    }
+
+    applyTheme(newTheme);
+  });
+}
+
+themePreference.addEventListener('change', (event) => {
+  if (getSavedTheme() === null) {
+    applyTheme(event.matches ? 'dark' : 'light');
+  }
+});
+
+applyTheme(getSavedTheme() ?? (themePreference.matches ? 'dark' : 'light'));
+
 // Leaflet tooltips take HTML, and so does the route list. Anything from a feed (names, ids, levels,
 // callsigns) goes through escapeHtml first, so it shows as text instead of being read as HTML.
 
